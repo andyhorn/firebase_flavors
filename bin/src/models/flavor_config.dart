@@ -28,13 +28,20 @@ class FlavorConfig {
     final platforms = map['platforms'] as String?;
     final iosBundleId = map['iosBundleId'] as String?;
 
+    String? normalizedSuffix;
+    if (androidPackageSuffix == null || androidPackageSuffix.isEmpty) {
+      normalizedSuffix = null;
+    } else {
+      final suffix = androidPackageSuffix.startsWith('.')
+          ? androidPackageSuffix
+          : '.$androidPackageSuffix';
+      normalizedSuffix = suffix;
+    }
+
     return FlavorConfig(
       name: name,
       firebaseProjectId: firebaseProjectId!,
-      androidPackageSuffix:
-          androidPackageSuffix == null || androidPackageSuffix.isEmpty
-          ? null
-          : '.$androidPackageSuffix',
+      androidPackageSuffix: normalizedSuffix,
       dartOptionsOut: dartOptionsOut,
       androidSrcDir: androidSrcDir,
       iosConfigDir: iosConfigDir,

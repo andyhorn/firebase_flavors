@@ -233,7 +233,12 @@ Map<String, String> _extractProductFlavors(String gradleContent, bool isKts) {
           'applicationIdSuffix\\s*[=:]\\s*["\']([^\'"]*)["\']';
       final suffixRegex = RegExp(suffixPattern);
       final suffixMatch = suffixRegex.firstMatch(flavorBody);
-      final suffix = suffixMatch?.group(1) ?? '';
+      var suffix = suffixMatch?.group(1) ?? '';
+
+      // Strip any leading dot when parsing (will be normalized later)
+      if (suffix.isNotEmpty && suffix.startsWith('.')) {
+        suffix = suffix.substring(1);
+      }
 
       flavors[flavorName] = suffix.isEmpty ? '' : suffix;
     }
@@ -252,7 +257,12 @@ Map<String, String> _extractProductFlavors(String gradleContent, bool isKts) {
           'applicationIdSuffix\\s*[=:]\\s*["\']([^\'"]*)["\']';
       final suffixRegex = RegExp(suffixPattern);
       final suffixMatch = suffixRegex.firstMatch(flavorBody);
-      final suffix = suffixMatch?.group(1) ?? '';
+      var suffix = suffixMatch?.group(1) ?? '';
+
+      // Strip any leading dot when parsing (will be normalized later)
+      if (suffix.isNotEmpty && suffix.startsWith('.')) {
+        suffix = suffix.substring(1);
+      }
 
       flavors[flavorName] = suffix.isEmpty ? '' : suffix;
     }
@@ -562,7 +572,7 @@ String _generateYamlContent({
       final isProdLike =
           flavor.toLowerCase() == 'prod' ||
           flavor.toLowerCase() == 'production';
-      suffix = isProdLike ? '' : '.$flavor';
+      suffix = isProdLike ? '' : flavor;
     }
 
     final optionsOut = 'lib/firebase_options_$flavor.dart';
