@@ -4,8 +4,10 @@ Logger? _logger;
 
 /// Initialize the logger with the specified verbosity level.
 void initLogger({bool verbose = false}) {
+  final level = verbose ? Level.all : Level.info;
+
   _logger = Logger(
-    level: verbose ? Level.debug : Level.info,
+    level: level,
     printer: PrettyPrinter(
       methodCount: 0,
       errorMethodCount: 3,
@@ -14,7 +16,11 @@ void initLogger({bool verbose = false}) {
       printEmojis: true,
       dateTimeFormat: DateTimeFormat.none,
     ),
+    output: ConsoleOutput(),
+    filter: ProductionFilter(),
   );
+
+  logDebug('Logger initialized with verbosity: $verbose');
 }
 
 /// Get the logger instance. Returns null if not initialized.
@@ -44,4 +50,3 @@ void logDebug(String message) {
 void logSuccess(String message) {
   _logger?.i('✅ $message');
 }
-
