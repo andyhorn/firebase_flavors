@@ -1,6 +1,6 @@
 name: firebase_flavors
 description: A Dart CLI tool for configuring Firebase for multiple Flutter flavors.
-version: 0.0.1
+version: 1.0.0+2
 repository: https://github.com/andyhorn/firebase_flavors
 
 environment:
@@ -15,5 +15,5 @@ dev_dependencies:
   lints: ^6.0.0
   test: ^1.25.6
 
-executables: 
+executables:
   firebase_flavors: firebase_flavors
