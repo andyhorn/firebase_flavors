@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:yaml/yaml.dart';
 
+import 'ios_run_script.dart';
 import 'logger.dart';
 import 'models/flavor_config.dart';
 import 'models/global_config.dart';
@@ -20,15 +21,27 @@ Future<void> configure(List<String> flavors) async {
     logInfo('Configuring flavors: ${flavors.join(', ')}');
   }
 
+  var configuredIos = false;
   for (final flavor in flavors) {
-    if (!config.flavors.containsKey(flavor)) {
+    final flavorConfig = config.flavors[flavor];
+    if (flavorConfig == null) {
       logWarning('Flavor "$flavor" not found in configuration. Skipping.');
       continue;
     }
 
+    final platformNames = _normalizePlatforms(flavorConfig.platforms);
+    configuredIos =
+        configuredIos || platformNames.isEmpty || platformNames.contains('ios');
+
     logInfo('Configuring flavor: $flavor');
-    await _configureFlavor(config, config.flavors[flavor]!);
+    await _configureFlavor(config, flavorConfig, platformNames);
     logSuccess('Flavor "$flavor" configured successfully');
+  }
+
+  if (configuredIos) {
+    await ensureIosGoogleServicesRunScript(config);
+  } else {
+    logDebug('No iOS flavors selected, skipping Xcode run script setup.');
   }
 
   logSuccess('All flavors configured');
@@ -62,9 +75,8 @@ GlobalConfig _readConfig() {
 Future<void> _configureFlavor(
   GlobalConfig config,
   FlavorConfig flavorConfig,
+  List<String> platformNames,
 ) async {
-  final platforms = flavorConfig.platforms?.split(',') ?? <String>[];
-  final platformNames = platforms.map((p) => p.toLowerCase().trim());
   final android = platformNames.isEmpty || platformNames.contains('android');
   final ios = platformNames.isEmpty || platformNames.contains('ios');
 
@@ -72,7 +84,7 @@ Future<void> _configureFlavor(
     'configure',
     '--project=${flavorConfig.firebaseProjectId}',
     '--out=${flavorConfig.dartOptionsOut}',
-    if (platforms.isNotEmpty) ...['--platforms=${platformNames.join(',')}'],
+    if (platformNames.isNotEmpty) ...['--platforms=${platformNames.join(',')}'],
     if (android) ...[
       '--android-package-name=${config.baseBundleId}${flavorConfig.androidPackageSuffix}',
       '--android-out=${config.androidSrcBase}/${flavorConfig.androidSrcDir}/google-services.json',
@@ -115,4 +127,16 @@ Future<void> _configureFlavor(
     logError('Exit code: $exitCode');
     exit(exitCode);
   }
+}
+
+List<String> _normalizePlatforms(String? platforms) {
+  if (platforms == null || platforms.isEmpty) {
+    return <String>[];
+  }
+
+  return platforms
+      .split(',')
+      .map((p) => p.toLowerCase().trim())
+      .where((p) => p.isNotEmpty)
+      .toList();
 }
