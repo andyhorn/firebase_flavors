@@ -19,8 +19,7 @@ class FlavorConfig {
       throw ArgumentError('firebaseProjectId is required', 'firebaseProjectId');
     }
 
-    final androidPackageSuffix =
-        map['androidPackageSuffix'] as String? ?? '.$name';
+    final androidPackageSuffix = map['androidPackageSuffix'] as String?;
     final dartOptionsOut =
         map['dartOptionsOut'] as String? ?? 'lib/firebase_options_$name.dart';
     final androidSrcDir = map['androidSrcDir'] as String? ?? name;
@@ -30,7 +29,10 @@ class FlavorConfig {
     return FlavorConfig(
       name: name,
       firebaseProjectId: firebaseProjectId!,
-      androidPackageSuffix: androidPackageSuffix,
+      androidPackageSuffix:
+          androidPackageSuffix == null || androidPackageSuffix.isEmpty
+          ? null
+          : '.$androidPackageSuffix',
       dartOptionsOut: dartOptionsOut,
       androidSrcDir: androidSrcDir,
       iosConfigDir: iosConfigDir,
@@ -40,7 +42,7 @@ class FlavorConfig {
 
   final String name;
   final String firebaseProjectId;
-  final String androidPackageSuffix;
+  final String? androidPackageSuffix;
   final String dartOptionsOut;
   final String androidSrcDir;
   final String iosConfigDir;
