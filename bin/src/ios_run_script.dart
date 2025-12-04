@@ -182,11 +182,34 @@ SCRIPT
 
 existing_phase = target.shell_script_build_phases.find { |phase| phase.name == script_name }
 
+# Find the "Compile Sources" build phase to insert before it
+compile_sources_phase = target.build_phases.find { |phase| phase.is_a?(Xcodeproj::Project::Object::PBXSourcesBuildPhase) }
+
 if existing_phase
   existing_phase.shell_script = shell_script
+  
+  # If it exists but is in the wrong position, move it before Compile Sources
+  if compile_sources_phase
+    compile_sources_index = target.build_phases.index(compile_sources_phase)
+    existing_phase_index = target.build_phases.index(existing_phase)
+    
+    # Only move if it's not already before Compile Sources
+    if existing_phase_index > compile_sources_index
+      target.build_phases.delete(existing_phase)
+      target.build_phases.insert(compile_sources_index, existing_phase)
+    end
+  end
 else
   new_phase = target.new_shell_script_build_phase(script_name)
   new_phase.shell_script = shell_script
+  
+  # Insert before Compile Sources if it exists, otherwise it will be at the end
+  if compile_sources_phase
+    compile_sources_index = target.build_phases.index(compile_sources_phase)
+    # Remove from end and insert before Compile Sources
+    target.build_phases.delete(new_phase)
+    target.build_phases.insert(compile_sources_index, new_phase)
+  end
 end
 
 project.save
