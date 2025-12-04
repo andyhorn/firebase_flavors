@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'logger.dart';
+
 /// Holds all detected values from Android or iOS project files.
 class _DetectionResult {
   _DetectionResult({
@@ -23,12 +25,20 @@ Future<void> init({bool force = false}) async {
   final yamlFile = File('firebase_flavors.yaml');
 
   if (yamlFile.existsSync() && !force) {
-    stderr.writeln(
+    logError(
       'firebase_flavors.yaml already exists.\n'
-      'Use `firebase_flavor_tool init --force` to overwrite.',
+      'Use `firebase_flavors init --force` to overwrite.',
     );
     exit(1);
   }
+
+  if (force && yamlFile.existsSync()) {
+    logWarning(
+      'Overwriting existing firebase_flavors.yaml (--force flag used)',
+    );
+  }
+
+  logInfo('Detecting project configuration...');
 
   // Try Android first, then iOS as fallback
   _DetectionResult? result;
@@ -36,14 +46,30 @@ Future<void> init({bool force = false}) async {
   final gradleKtsFile = File('android/app/build.gradle.kts');
 
   if (gradleFile.existsSync() || gradleKtsFile.existsSync()) {
+    logDebug('Found Android Gradle file, attempting detection...');
     result = _detectFromAndroidGradle(gradleFile, gradleKtsFile);
+    if (result != null) {
+      logInfo('Android detection successful');
+      if (result.flavors.isNotEmpty) {
+        logDebug('Detected flavors from Android: ${result.flavors.join(', ')}');
+      }
+      if (result.baseBundleId != null) {
+        logDebug(
+          'Detected base bundle ID from Android: ${result.baseBundleId}',
+        );
+      }
+    } else {
+      logDebug('Android detection did not find configuration');
+    }
   }
 
   // Fallback to iOS if Android detection didn't find flavors or bundle ID
   if (result == null ||
       (result.flavors.isEmpty && result.baseBundleId == null)) {
+    logDebug('Attempting iOS project detection...');
     final iosResult = _detectFromIOSProject();
     if (iosResult != null) {
+      logInfo('iOS detection successful');
       // Merge results, preferring Android values
       result = _DetectionResult(
         baseBundleId: result?.baseBundleId ?? iosResult.baseBundleId,
@@ -55,6 +81,14 @@ Future<void> init({bool force = false}) async {
         iosTarget: iosResult.iosTarget,
         iosBuildConfigs: iosResult.iosBuildConfigs,
       );
+      if (iosResult.flavors.isNotEmpty) {
+        logDebug('Detected flavors from iOS: ${iosResult.flavors.join(', ')}');
+      }
+      if (iosResult.baseBundleId != null) {
+        logDebug('Detected base bundle ID from iOS: ${iosResult.baseBundleId}');
+      }
+    } else {
+      logDebug('iOS detection did not find configuration');
     }
   }
 
@@ -66,6 +100,12 @@ Future<void> init({bool force = false}) async {
   final appName = result?.appName ?? 'your_app_name_here';
   final flavorSuffixes = result?.flavorSuffixes ?? {};
 
+  if (result == null ||
+      (result.flavors.isEmpty && result.baseBundleId == null)) {
+    logWarning('No project configuration detected, using defaults');
+  }
+
+  logInfo('Generating configuration file...');
   final yamlContent = _generateYamlContent(
     baseBundleId: baseBundleId,
     appName: appName,
@@ -76,16 +116,17 @@ Future<void> init({bool force = false}) async {
   );
 
   yamlFile.writeAsStringSync(yamlContent);
+  logDebug('Configuration file written to: ${yamlFile.path}');
 
-  print('Created firebase_flavors.yaml ✅');
-  print('Detected flavors: ${flavors.join(', ')}');
+  logSuccess('Created firebase_flavors.yaml');
+  logInfo('Detected flavors: ${flavors.join(', ')}');
   if (result?.baseBundleId != null) {
     final source = gradleFile.existsSync() || gradleKtsFile.existsSync()
         ? 'Android'
         : 'iOS';
-    print('Detected base bundle ID from $source: ${result!.baseBundleId}');
+    logInfo('Detected base bundle ID from $source: ${result!.baseBundleId}');
   } else {
-    print(
+    logWarning(
       'Base bundle ID defaulted to $baseBundleId (edit this in firebase_flavors.yaml).',
     );
   }
@@ -110,10 +151,21 @@ _DetectionResult? _detectFromAndroidGradle(
   }
 
   try {
+    logDebug('Reading Gradle file: ${file.path}');
     final content = file.readAsStringSync();
     final baseBundleId = _extractApplicationId(content);
     final flavorData = _extractProductFlavors(content, isKts);
     final appName = _extractAppNameFromGradle(content);
+
+    if (baseBundleId != null) {
+      logDebug('Extracted application ID: $baseBundleId');
+    }
+    if (flavorData.isNotEmpty) {
+      logDebug('Extracted ${flavorData.length} product flavor(s)');
+    }
+    if (appName != null) {
+      logDebug('Extracted app name: $appName');
+    }
 
     return _DetectionResult(
       baseBundleId: baseBundleId,
@@ -122,6 +174,7 @@ _DetectionResult? _detectFromAndroidGradle(
       appName: appName,
     );
   } catch (e) {
+    logDebug('Failed to parse Android Gradle file: $e');
     // Silently fail and return null to allow fallback to iOS
     return null;
   }
@@ -227,8 +280,11 @@ _DetectionResult? _detectFromIOSProject() {
   // Try to find the Xcode project
   final iosDir = Directory('ios');
   if (!iosDir.existsSync()) {
+    logDebug('iOS directory not found');
     return null;
   }
+
+  logDebug('iOS directory found, searching for project files...');
 
   // Find project.pbxproj file
   File? pbxprojFile;
@@ -269,20 +325,39 @@ _DetectionResult? _detectFromIOSProject() {
   List<String>? iosBuildConfigs;
 
   if (pbxprojFile != null && pbxprojFile.existsSync()) {
+    logDebug('Found project.pbxproj: ${pbxprojFile.path}');
     try {
       baseBundleId ??= _extractBundleIdFromPbxproj(pbxprojFile);
       iosBuildConfigs = _extractBuildConfigsFromPbxproj(pbxprojFile);
       iosTarget = _extractTargetFromPbxproj(pbxprojFile);
+      if (baseBundleId != null) {
+        logDebug('Extracted bundle ID from project.pbxproj: $baseBundleId');
+      }
+      if (iosBuildConfigs.isNotEmpty) {
+        logDebug('Extracted build configs: ${iosBuildConfigs.join(', ')}');
+      }
+      if (iosTarget != null) {
+        logDebug('Extracted target: $iosTarget');
+      }
     } catch (e) {
+      logDebug('Failed to parse project.pbxproj: $e');
       // Continue to try Info.plist
     }
   }
 
   if (infoPlistFile != null && infoPlistFile.existsSync()) {
+    logDebug('Found Info.plist: ${infoPlistFile.path}');
     try {
       baseBundleId ??= _extractBundleIdFromInfoPlist(infoPlistFile);
       appName ??= _extractAppNameFromInfoPlist(infoPlistFile);
+      if (baseBundleId != null) {
+        logDebug('Extracted bundle ID from Info.plist: $baseBundleId');
+      }
+      if (appName != null) {
+        logDebug('Extracted app name from Info.plist: $appName');
+      }
     } catch (e) {
+      logDebug('Failed to parse Info.plist: $e');
       // Continue with what we have
     }
   }
