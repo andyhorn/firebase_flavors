@@ -30,6 +30,8 @@ Future<void> configure(
   final flavorsToRun = flavors.where((flavor) {
     if (config.flavors[flavor] == null) {
       logWarning('Flavor "$flavor" not found in configuration. Skipping.');
+      logInfo('Available flavors: ${config.flavors.keys.join(', ')}');
+      logInfo('Add this flavor to firebase_flavors.yaml or check for typos.');
       return false;
     }
 
@@ -88,8 +90,13 @@ GlobalConfig _readConfig() {
   final file = File('firebase_flavors.yaml');
 
   if (!file.existsSync()) {
+    final absolutePath = file.absolute.path;
     logError('Configuration file firebase_flavors.yaml not found.');
+    logInfo('Expected location: $absolutePath');
     logInfo('Run "firebase_flavors init" to create a configuration file.');
+    logInfo(
+      'Or ensure you are running this command from your Flutter project root directory.',
+    );
     exit(1);
   }
 
@@ -104,7 +111,24 @@ GlobalConfig _readConfig() {
     );
     return config;
   } catch (e, stackTrace) {
-    logError('Failed to parse configuration file', e, stackTrace);
+    logError(
+      'Failed to parse configuration file: ${file.absolute.path}',
+      e,
+      stackTrace,
+    );
+    if (e is ArgumentError) {
+      logInfo('Configuration error: ${e.message}');
+      logInfo(
+        'Please check your firebase_flavors.yaml file for syntax errors.',
+      );
+    } else if (e.toString().contains('YAML')) {
+      logInfo(
+        'YAML syntax error detected. Please verify your configuration file format.',
+      );
+      logInfo(
+        'Common issues: missing quotes, incorrect indentation, or invalid characters.',
+      );
+    }
     exit(1);
   }
 }
@@ -155,10 +179,13 @@ Future<void> _configureFlavor(
       mode: ProcessStartMode.inheritStdio,
     );
   } on ProcessException catch (e, stackTrace) {
-    logError(
-      '\nFailed to start flutterfire. Ensure it is installed and on your PATH.',
-      e,
-      stackTrace,
+    logError('Failed to start flutterfire command.', e, stackTrace);
+    logInfo(
+      'This usually means flutterfire CLI is not installed or not on your PATH.',
+    );
+    logInfo('Install it with: dart pub global activate flutterfire_cli');
+    logInfo(
+      'Then ensure your PATH includes: ${Platform.environment['HOME'] ?? Platform.environment['USERPROFILE']}/.pub-cache/bin',
     );
     exit(1);
   }
@@ -168,6 +195,14 @@ Future<void> _configureFlavor(
   if (exitCode != 0) {
     logError('flutterfire configure failed for flavor "${flavorConfig.name}"');
     logError('Exit code: $exitCode');
+    logInfo('Common causes:');
+    logInfo(
+      '  - Firebase project ID "${flavorConfig.firebaseProjectId}" not found or inaccessible',
+    );
+    logInfo('  - Bundle ID or package name not registered in Firebase project');
+    logInfo('  - Network connectivity issues');
+    logInfo('  - Firebase authentication required (run: firebase login)');
+    logInfo('Check the flutterfire output above for more details.');
     exit(exitCode);
   }
 }

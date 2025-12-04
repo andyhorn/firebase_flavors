@@ -36,7 +36,9 @@ void main(List<String> arguments) async {
     logDebug('Arguments: ${results.arguments}');
 
     if (results.rest.isEmpty) {
-      logError('No arguments provided');
+      logError('No command provided');
+      logInfo('Available commands: init, configure');
+      logInfo('Use --help for more information.');
       printUsage(argParser);
       return;
     }
@@ -51,7 +53,9 @@ void main(List<String> arguments) async {
 
     if (command == 'configure') {
       if (results.rest.length > 2) {
-        logError('Invalid number of arguments');
+        logError('Too many arguments for configure command');
+        logInfo('Usage: firebase_flavors configure [flavor1,flavor2,...]');
+        logInfo('Example: firebase_flavors configure dev,staging');
         printUsage(argParser);
         return;
       }
@@ -75,6 +79,8 @@ void main(List<String> arguments) async {
     }
 
     logError('Unknown command: $command');
+    logInfo('Available commands: init, configure');
+    logInfo('Use --help for more information.');
     printUsage(argParser);
   } on FormatException catch (e) {
     // Print usage information if an invalid argument was provided.

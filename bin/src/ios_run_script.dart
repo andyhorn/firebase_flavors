@@ -10,10 +10,12 @@ Future<void> ensureIosGoogleServicesRunScript(GlobalConfig config) async {
   final xcodeprojDir = Directory(xcodeprojPath);
 
   if (!xcodeprojDir.existsSync()) {
+    final absolutePath = xcodeprojDir.absolute.path;
     logWarning(
-      'Xcode project not found at ${xcodeprojPath}, skipping iOS run script setup.',
+      'Xcode project not found at $absolutePath, skipping iOS run script setup.',
     );
-
+    logInfo('Expected Xcode project at: $absolutePath');
+    logInfo('Update ios.xcodeprojPath in firebase_flavors.yaml if your project uses a different path.');
     return;
   }
 
