@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'logger.dart';
 import 'utils/gradle_parser.dart';
-import 'utils/ios_utils.dart';
 import 'utils/yaml_generator.dart';
 
 /// Holds all detected values from Android or iOS project files.
@@ -13,7 +12,6 @@ class _DetectionResult {
     this.flavorSuffixes = const {},
     this.appName,
     this.iosTarget,
-    this.iosBuildConfigs,
   });
 
   final String? baseBundleId;
@@ -21,7 +19,6 @@ class _DetectionResult {
   final Map<String, String> flavorSuffixes; // flavor -> suffix
   final String? appName;
   final String? iosTarget;
-  final List<String>? iosBuildConfigs;
 }
 
 Future<void> init({bool force = false, required String configPath}) async {
@@ -82,7 +79,6 @@ Future<void> init({bool force = false, required String configPath}) async {
         flavorSuffixes: result?.flavorSuffixes ?? iosResult.flavorSuffixes,
         appName: result?.appName ?? iosResult.appName,
         iosTarget: iosResult.iosTarget,
-        iosBuildConfigs: iosResult.iosBuildConfigs,
       );
       if (iosResult.flavors.isNotEmpty) {
         logDebug('Detected flavors from iOS: ${iosResult.flavors.join(', ')}');
@@ -115,7 +111,6 @@ Future<void> init({bool force = false, required String configPath}) async {
     flavors: flavors,
     flavorSuffixes: flavorSuffixes,
     iosTarget: result?.iosTarget,
-    iosBuildConfigs: result?.iosBuildConfigs,
   );
 
   yamlFile.writeAsStringSync(yamlContent);
@@ -230,19 +225,14 @@ _DetectionResult? _detectFromIOSProject() {
   String? baseBundleId;
   String? appName;
   String? iosTarget;
-  List<String>? iosBuildConfigs;
 
   if (pbxprojFile != null && pbxprojFile.existsSync()) {
     logDebug('Found project.pbxproj: ${pbxprojFile.path}');
     try {
       baseBundleId ??= _extractBundleIdFromPbxproj(pbxprojFile);
-      iosBuildConfigs = _extractBuildConfigsFromPbxproj(pbxprojFile);
       iosTarget = _extractTargetFromPbxproj(pbxprojFile);
       if (baseBundleId != null) {
         logDebug('Extracted bundle ID from project.pbxproj: $baseBundleId');
-      }
-      if (iosBuildConfigs.isNotEmpty) {
-        logDebug('Extracted build configs: ${iosBuildConfigs.join(', ')}');
       }
       if (iosTarget != null) {
         logDebug('Extracted target: $iosTarget');
@@ -271,18 +261,12 @@ _DetectionResult? _detectFromIOSProject() {
   }
 
   // If we found at least something, return a result
-  if (baseBundleId != null ||
-      appName != null ||
-      (iosBuildConfigs != null && iosBuildConfigs.isNotEmpty)) {
-    // Try to infer flavors from build configurations
-    final flavors = IosUtils.inferFlavorsFromBuildConfigs(iosBuildConfigs);
-
+  if (baseBundleId != null || appName != null) {
     return _DetectionResult(
       baseBundleId: baseBundleId,
-      flavors: flavors,
+      flavors: const [],
       appName: appName,
       iosTarget: iosTarget ?? 'Runner',
-      iosBuildConfigs: iosBuildConfigs,
     );
   }
 
@@ -314,32 +298,6 @@ String? _extractBundleIdFromPbxproj(File pbxprojFile) {
   return firstMatch?.group(1);
 }
 
-/// Extracts build configurations from project.pbxproj file.
-List<String> _extractBuildConfigsFromPbxproj(File pbxprojFile) {
-  final content = pbxprojFile.readAsStringSync();
-  final configs = <String>[];
-
-  // Look for XCBuildConfiguration sections
-  // Format: name = Debug; or name = Release-production;
-  final configNamePattern = r'name\s*=\s*([A-Za-z0-9_-]+)\s*;';
-  final configNameRegex = RegExp(configNamePattern, multiLine: true);
-
-  final matches = configNameRegex.allMatches(content);
-  for (final match in matches) {
-    final configName = match.group(1)!;
-    // Filter out common base configs and keep flavor-specific ones
-    if (!configName.startsWith('Debug') &&
-        !configName.startsWith('Release') &&
-        !configName.startsWith('Profile')) {
-      continue;
-    }
-    if (!configs.contains(configName)) {
-      configs.add(configName);
-    }
-  }
-
-  return configs;
-}
 
 /// Extracts target name from project.pbxproj file.
 String? _extractTargetFromPbxproj(File pbxprojFile) {

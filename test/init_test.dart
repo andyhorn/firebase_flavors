@@ -14,7 +14,6 @@ void main() {
     // - _extractProductFlavors() - Gradle flavor parsing (KTS & Groovy)
     // - _extractAppNameFromGradle() - App name extraction
     // - _generateYamlContent() - YAML generation
-    // - _inferFlavorsFromBuildConfigs() - iOS build config parsing
     //
     // The init() command itself is hard to unit test because it:
     // - Interacts with the file system

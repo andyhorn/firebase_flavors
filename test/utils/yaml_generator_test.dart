@@ -82,54 +82,6 @@ void main() {
       expect(content, contains('configBase: ios/Runner/Config'));
     });
 
-    test('includes iOS build configs when provided', () {
-      final content = YamlGenerator.generateContent(
-        baseBundleId: 'com.example.app',
-        appName: 'Test App',
-        flavors: ['dev'],
-        flavorSuffixes: {},
-        iosBuildConfigs: ['Debug-dev', 'Release-dev', 'Profile-dev'],
-      );
-
-      expect(content, contains('      - Debug-dev'));
-      expect(content, contains('      - Release-dev'));
-      expect(content, contains('      - Profile-dev'));
-    });
-
-    test('uses default build configs when not provided', () {
-      final content = YamlGenerator.generateContent(
-        baseBundleId: 'com.example.app',
-        appName: 'Test App',
-        flavors: ['dev'],
-        flavorSuffixes: {},
-      );
-
-      expect(content, contains('      - Debug-dev'));
-      expect(content, contains('      - Release-dev'));
-      expect(content, contains('      - Profile-dev'));
-    });
-
-    test('filters build configs by flavor', () {
-      final content = YamlGenerator.generateContent(
-        baseBundleId: 'com.example.app',
-        appName: 'Test App',
-        flavors: ['dev', 'staging'],
-        flavorSuffixes: {},
-        iosBuildConfigs: [
-          'Debug-dev',
-          'Release-dev',
-          'Debug-staging',
-          'Release-staging',
-        ],
-      );
-
-      expect(content, contains('  dev:'));
-      expect(content, contains('      - Debug-dev'));
-      expect(content, contains('      - Release-dev'));
-      expect(content, contains('  staging:'));
-      expect(content, contains('      - Debug-staging'));
-      expect(content, contains('      - Release-staging'));
-    });
 
     test('includes all required flavor fields', () {
       final content = YamlGenerator.generateContent(
@@ -144,7 +96,6 @@ void main() {
       expect(content, contains('dartOptionsOut:'));
       expect(content, contains('androidSrcDir:'));
       expect(content, contains('iosConfigDir:'));
-      expect(content, contains('iosBuildConfigs:'));
     });
   });
 }

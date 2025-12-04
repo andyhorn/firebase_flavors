@@ -7,7 +7,6 @@ class YamlGenerator {
     required List<String> flavors,
     required Map<String, String> flavorSuffixes,
     String? iosTarget,
-    List<String>? iosBuildConfigs,
   }) {
     final buffer = StringBuffer();
 
@@ -55,32 +54,6 @@ class YamlGenerator {
       buffer.writeln('    iosConfigDir: $iosConfigDir');
       buffer.writeln('    # Optional: override iOS bundle ID for this flavor.');
       buffer.writeln('    # iosBundleId: com.example.app.$flavor');
-
-      // Use detected build configs if available, otherwise generate defaults
-      buffer.writeln('    iosBuildConfigs:');
-      if (iosBuildConfigs != null && iosBuildConfigs.isNotEmpty) {
-        // Filter configs for this flavor
-        final flavorConfigs = iosBuildConfigs
-            .where(
-              (config) => config.toLowerCase().contains(flavor.toLowerCase()),
-            )
-            .toList();
-        if (flavorConfigs.isNotEmpty) {
-          for (final config in flavorConfigs) {
-            buffer.writeln('      - $config');
-          }
-        } else {
-          // Fallback to default pattern
-          buffer.writeln('      - Debug-$flavor');
-          buffer.writeln('      - Release-$flavor');
-          buffer.writeln('      - Profile-$flavor');
-        }
-      } else {
-        // Default pattern
-        buffer.writeln('      - Debug-$flavor');
-        buffer.writeln('      - Release-$flavor');
-        buffer.writeln('      - Profile-$flavor');
-      }
       buffer.writeln('');
     }
 
