@@ -63,18 +63,25 @@ Future<void> _configureFlavor(
   GlobalConfig config,
   FlavorConfig flavorConfig,
 ) async {
+  final platforms = flavorConfig.platforms?.split(',') ?? <String>[];
+  final platformNames = platforms.map((p) => p.toLowerCase().trim());
+  final android = platformNames.isEmpty || platformNames.contains('android');
+  final ios = platformNames.isEmpty || platformNames.contains('ios');
+
   final args = [
     'configure',
     '--project=${flavorConfig.firebaseProjectId}',
     '--out=${flavorConfig.dartOptionsOut}',
-    if (flavorConfig.platforms?.isNotEmpty ?? false) ...[
-      '--platforms=${flavorConfig.platforms}',
+    if (platforms.isNotEmpty) ...['--platforms=${platformNames.join(',')}'],
+    if (android) ...[
+      '--android-package-name=${config.baseBundleId}${flavorConfig.androidPackageSuffix}',
+      '--android-out=${config.androidSrcBase}/${flavorConfig.androidSrcDir}/google-services.json',
     ],
-    '--android-package-name=${config.baseBundleId}${flavorConfig.androidPackageSuffix}',
-    '--android-out=${flavorConfig.androidSrcDir}/google-services.json',
-    '--ios-bundle-id=${config.baseBundleId}',
-    '--ios-out=${flavorConfig.iosConfigDir}/GoogleService-Info.plist',
-    '--ios-build-config=Debug-${flavorConfig.name}',
+    if (ios) ...[
+      '--ios-bundle-id=${config.baseBundleId}',
+      '--ios-out=${config.iosConfigBase}/${flavorConfig.iosConfigDir}/GoogleService-Info.plist',
+      '--ios-build-config=Debug-${flavorConfig.name}',
+    ],
     '--yes',
   ];
 
