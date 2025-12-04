@@ -16,4 +16,4 @@ dev_dependencies:
   test: ^1.25.6
 
 executables: 
-  firebase_flavors: bin/firebase_flavors.dart
+  firebase_flavors: firebase_flavors
