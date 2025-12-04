@@ -6,6 +6,7 @@ import 'ios_run_script.dart';
 import 'logger.dart';
 import 'models/flavor_config.dart';
 import 'models/global_config.dart';
+import 'prerequisites.dart';
 
 Future<void> configure(
   List<String> flavors, {
@@ -40,6 +41,20 @@ Future<void> configure(
     final names = _normalizePlatforms(config.flavors[flavor]!.platforms);
     return names.isEmpty || names.contains('ios');
   });
+
+  // Check prerequisites before proceeding
+  final needsFirebase = !skipFirebase;
+  final needsIosScript = !skipXcode && configuredIos;
+
+  if (needsFirebase || needsIosScript) {
+    final prerequisitesMet = await checkPrerequisites(needsIos: needsIosScript);
+    if (!prerequisitesMet) {
+      logError(
+        'Prerequisites check failed. Please install missing tools and try again.',
+      );
+      exit(1);
+    }
+  }
 
   // Run Firebase configuration unless skip-firebase is specified
   if (!skipFirebase) {
