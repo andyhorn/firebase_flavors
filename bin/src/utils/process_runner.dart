@@ -39,4 +39,3 @@ class DefaultProcessRunner implements ProcessRunner {
     return Process.start(executable, arguments, mode: mode);
   }
 }
-

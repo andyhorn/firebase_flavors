@@ -108,4 +108,3 @@ class GradleParser {
     return null;
   }
 }
-

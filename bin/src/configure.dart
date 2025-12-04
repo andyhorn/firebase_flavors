@@ -39,7 +39,9 @@ Future<void> configure(
 
   // Check if any flavors have an iOS platform
   final configuredIos = flavorsToRun.any((flavor) {
-    final names = ConfigReader.normalizePlatforms(config.flavors[flavor]!.platforms);
+    final names = ConfigReader.normalizePlatforms(
+      config.flavors[flavor]!.platforms,
+    );
     return names.isEmpty || names.contains('ios');
   });
 
@@ -62,10 +64,16 @@ Future<void> configure(
     final firebaseService = FirebaseService();
     for (final flavor in flavorsToRun) {
       final flavorConfig = config.flavors[flavor]!;
-      final platformNames = ConfigReader.normalizePlatforms(flavorConfig.platforms);
+      final platformNames = ConfigReader.normalizePlatforms(
+        flavorConfig.platforms,
+      );
 
       logInfo('Configuring flavor: $flavor');
-      await firebaseService.configureFlavor(config, flavorConfig, platformNames);
+      await firebaseService.configureFlavor(
+        config,
+        flavorConfig,
+        platformNames,
+      );
       logSuccess('Flavor "$flavor" configured successfully');
     }
   } else {

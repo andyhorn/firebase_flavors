@@ -10,7 +10,8 @@ class FirebaseService {
   final ProcessRunner _processRunner;
 
   FirebaseService({ProcessRunner? processRunner})
-      : _processRunner = processRunner ?? DefaultProcessRunner();
+    : _processRunner = processRunner ?? DefaultProcessRunner();
+
   /// Configures a flavor using flutterfire CLI.
   ///
   /// [config] - Global configuration
@@ -31,7 +32,9 @@ class FirebaseService {
       'configure',
       '--project=${flavorConfig.firebaseProjectId}',
       '--out=${flavorConfig.dartOptionsOut}',
-      if (platformNames.isNotEmpty) ...['--platforms=${platformNames.join(',')}'],
+      if (platformNames.isNotEmpty) ...[
+        '--platforms=${platformNames.join(',')}',
+      ],
       if (android) ...[
         '--android-package-name=${config.baseBundleId}${flavorConfig.androidPackageSuffix}',
         '--android-out=${config.androidSrcBase}/${flavorConfig.androidSrcDir}/google-services.json',
@@ -79,13 +82,17 @@ class FirebaseService {
     final exitCode = await process.exitCode;
 
     if (exitCode != 0) {
-      logError('flutterfire configure failed for flavor "${flavorConfig.name}"');
+      logError(
+        'flutterfire configure failed for flavor "${flavorConfig.name}"',
+      );
       logError('Exit code: $exitCode');
       logInfo('Common causes:');
       logInfo(
         '  - Firebase project ID "${flavorConfig.firebaseProjectId}" not found or inaccessible',
       );
-      logInfo('  - Bundle ID or package name not registered in Firebase project');
+      logInfo(
+        '  - Bundle ID or package name not registered in Firebase project',
+      );
       logInfo('  - Network connectivity issues');
       logInfo('  - Firebase authentication required (run: firebase login)');
       logInfo('Check the flutterfire output above for more details.');
@@ -93,4 +100,3 @@ class FirebaseService {
     }
   }
 }
-

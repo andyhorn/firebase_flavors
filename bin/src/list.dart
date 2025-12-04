@@ -35,7 +35,9 @@ Future<void> listFlavors({required String configPath}) async {
   for (final entry in config.flavors.entries) {
     final flavor = entry.key;
     final flavorConfig = entry.value;
-    final platformNames = ConfigReader.normalizePlatforms(flavorConfig.platforms);
+    final platformNames = ConfigReader.normalizePlatforms(
+      flavorConfig.platforms,
+    );
     final platforms = platformNames.isEmpty
         ? 'all platforms'
         : platformNames.join(', ');

@@ -6,11 +6,13 @@ import '../../bin/src/models/global_config.dart';
 void main() {
   group('GlobalConfig.fromYaml', () {
     test('parses minimal required fields', () {
-      final yaml = loadYaml('''
+      final yaml =
+          loadYaml('''
 appName: Test App
 baseBundleId: com.example.app
 flavors: {}
-''') as YamlMap;
+''')
+              as YamlMap;
 
       final config = GlobalConfig.fromYaml(yaml);
 
@@ -24,7 +26,8 @@ flavors: {}
     });
 
     test('parses all fields when provided', () {
-      final yaml = loadYaml('''
+      final yaml =
+          loadYaml('''
 appName: My App
 baseBundleId: com.example.myapp
 android:
@@ -36,7 +39,8 @@ ios:
 flavors:
   dev:
     firebaseProjectId: dev-project
-''') as YamlMap;
+''')
+              as YamlMap;
 
       final config = GlobalConfig.fromYaml(yaml);
 
@@ -52,11 +56,13 @@ flavors:
     });
 
     test('uses default android srcBase when not provided', () {
-      final yaml = loadYaml('''
+      final yaml =
+          loadYaml('''
 appName: Test App
 baseBundleId: com.example.app
 flavors: {}
-''') as YamlMap;
+''')
+              as YamlMap;
 
       final config = GlobalConfig.fromYaml(yaml);
 
@@ -64,11 +70,13 @@ flavors: {}
     });
 
     test('uses default iOS paths when not provided', () {
-      final yaml = loadYaml('''
+      final yaml =
+          loadYaml('''
 appName: Test App
 baseBundleId: com.example.app
 flavors: {}
-''') as YamlMap;
+''')
+              as YamlMap;
 
       final config = GlobalConfig.fromYaml(yaml);
 
@@ -78,7 +86,8 @@ flavors: {}
     });
 
     test('parses multiple flavors', () {
-      final yaml = loadYaml('''
+      final yaml =
+          loadYaml('''
 appName: Test App
 baseBundleId: com.example.app
 flavors:
@@ -88,7 +97,8 @@ flavors:
     firebaseProjectId: staging-project
   prod:
     firebaseProjectId: prod-project
-''') as YamlMap;
+''')
+              as YamlMap;
 
       final config = GlobalConfig.fromYaml(yaml);
 
@@ -96,17 +106,22 @@ flavors:
       expect(config.flavors['dev'], isNotNull);
       expect(config.flavors['dev']!.firebaseProjectId, equals('dev-project'));
       expect(config.flavors['staging'], isNotNull);
-      expect(config.flavors['staging']!.firebaseProjectId, equals('staging-project'));
+      expect(
+        config.flavors['staging']!.firebaseProjectId,
+        equals('staging-project'),
+      );
       expect(config.flavors['prod'], isNotNull);
       expect(config.flavors['prod']!.firebaseProjectId, equals('prod-project'));
     });
 
     test('handles empty flavors map', () {
-      final yaml = loadYaml('''
+      final yaml =
+          loadYaml('''
 appName: Test App
 baseBundleId: com.example.app
 flavors: {}
-''') as YamlMap;
+''')
+              as YamlMap;
 
       final config = GlobalConfig.fromYaml(yaml);
 
@@ -114,10 +129,12 @@ flavors: {}
     });
 
     test('handles missing flavors key', () {
-      final yaml = loadYaml('''
+      final yaml =
+          loadYaml('''
 appName: Test App
 baseBundleId: com.example.app
-''') as YamlMap;
+''')
+              as YamlMap;
 
       final config = GlobalConfig.fromYaml(yaml);
 
@@ -125,13 +142,15 @@ baseBundleId: com.example.app
     });
 
     test('handles partial iOS configuration', () {
-      final yaml = loadYaml('''
+      final yaml =
+          loadYaml('''
 appName: Test App
 baseBundleId: com.example.app
 ios:
   target: CustomTarget
 flavors: {}
-''') as YamlMap;
+''')
+              as YamlMap;
 
       final config = GlobalConfig.fromYaml(yaml);
 
@@ -141,4 +160,3 @@ flavors: {}
     });
   });
 }
-

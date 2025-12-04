@@ -21,11 +21,7 @@ ArgParser getArgParser() {
       negatable: false,
       help: 'Skip Firebase configuration.',
     )
-    ..addFlag(
-      'skip-xcode',
-      negatable: false,
-      help: 'Skip Xcode script setup.',
-    )
+    ..addFlag('skip-xcode', negatable: false, help: 'Skip Xcode script setup.')
     ..addOption(
       'config',
       abbr: 'c',

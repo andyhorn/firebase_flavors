@@ -34,4 +34,3 @@ class IosUtils {
     return flavors.toList()..sort();
   }
 }
-

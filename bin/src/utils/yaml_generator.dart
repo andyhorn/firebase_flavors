@@ -87,4 +87,3 @@ class YamlGenerator {
     return buffer.toString();
   }
 }
-

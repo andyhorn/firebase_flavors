@@ -21,7 +21,9 @@ Future<void> ensureIosGoogleServicesRunScript(
       'Xcode project not found at $absolutePath, skipping iOS run script setup.',
     );
     logInfo('Expected Xcode project at: $absolutePath');
-    logInfo('Update ios.xcodeprojPath in firebase_flavors.yaml if your project uses a different path.');
+    logInfo(
+      'Update ios.xcodeprojPath in firebase_flavors.yaml if your project uses a different path.',
+    );
     return;
   }
 
@@ -109,7 +111,6 @@ Future<void> ensureIosGoogleServicesRunScript(
     }
   }
 }
-
 
 String _rubyScriptContents() => r'''
 #!/usr/bin/env ruby

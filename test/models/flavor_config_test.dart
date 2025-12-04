@@ -6,10 +6,12 @@ import '../../bin/src/models/flavor_config.dart';
 void main() {
   group('FlavorConfig.fromYaml', () {
     test('parses minimal required fields', () {
-      final yaml = loadYaml('''
+      final yaml =
+          loadYaml('''
 name: dev
 firebaseProjectId: test-project-id
-''') as YamlMap;
+''')
+              as YamlMap;
 
       final config = FlavorConfig.fromYaml(yaml);
 
@@ -24,7 +26,8 @@ firebaseProjectId: test-project-id
     });
 
     test('parses all fields when provided', () {
-      final yaml = loadYaml('''
+      final yaml =
+          loadYaml('''
 name: staging
 firebaseProjectId: staging-project-id
 androidPackageSuffix: .stg
@@ -33,7 +36,8 @@ androidSrcDir: staging_android
 iosConfigDir: staging_ios
 platforms: android,ios
 iosBundleId: com.example.staging
-''') as YamlMap;
+''')
+              as YamlMap;
 
       final config = FlavorConfig.fromYaml(yaml);
 
@@ -48,42 +52,52 @@ iosBundleId: com.example.staging
     });
 
     test('throws ArgumentError when firebaseProjectId is missing', () {
-      final yaml = loadYaml('''
+      final yaml =
+          loadYaml('''
 name: dev
-''') as YamlMap;
+''')
+              as YamlMap;
 
       expect(
         () => FlavorConfig.fromYaml(yaml),
-        throwsA(isA<ArgumentError>().having(
-          (e) => e.message,
-          'message',
-          contains('firebaseProjectId is required'),
-        )),
+        throwsA(
+          isA<ArgumentError>().having(
+            (e) => e.message,
+            'message',
+            contains('firebaseProjectId is required'),
+          ),
+        ),
       );
     });
 
     test('throws ArgumentError when firebaseProjectId is empty', () {
-      final yaml = loadYaml('''
+      final yaml =
+          loadYaml('''
 name: dev
 firebaseProjectId: ''
-''') as YamlMap;
+''')
+              as YamlMap;
 
       expect(
         () => FlavorConfig.fromYaml(yaml),
-        throwsA(isA<ArgumentError>().having(
-          (e) => e.message,
-          'message',
-          contains('firebaseProjectId is required'),
-        )),
+        throwsA(
+          isA<ArgumentError>().having(
+            (e) => e.message,
+            'message',
+            contains('firebaseProjectId is required'),
+          ),
+        ),
       );
     });
 
     test('normalizes androidPackageSuffix with leading dot', () {
-      final yaml = loadYaml('''
+      final yaml =
+          loadYaml('''
 name: dev
 firebaseProjectId: test-project
 androidPackageSuffix: .dev
-''') as YamlMap;
+''')
+              as YamlMap;
 
       final config = FlavorConfig.fromYaml(yaml);
 
@@ -91,11 +105,13 @@ androidPackageSuffix: .dev
     });
 
     test('normalizes androidPackageSuffix without leading dot', () {
-      final yaml = loadYaml('''
+      final yaml =
+          loadYaml('''
 name: dev
 firebaseProjectId: test-project
 androidPackageSuffix: dev
-''') as YamlMap;
+''')
+              as YamlMap;
 
       final config = FlavorConfig.fromYaml(yaml);
 
@@ -103,11 +119,13 @@ androidPackageSuffix: dev
     });
 
     test('sets androidPackageSuffix to null when empty', () {
-      final yaml = loadYaml('''
+      final yaml =
+          loadYaml('''
 name: prod
 firebaseProjectId: test-project
 androidPackageSuffix: ''
-''') as YamlMap;
+''')
+              as YamlMap;
 
       final config = FlavorConfig.fromYaml(yaml);
 
@@ -115,10 +133,12 @@ androidPackageSuffix: ''
     });
 
     test('sets androidPackageSuffix to null when not provided', () {
-      final yaml = loadYaml('''
+      final yaml =
+          loadYaml('''
 name: prod
 firebaseProjectId: test-project
-''') as YamlMap;
+''')
+              as YamlMap;
 
       final config = FlavorConfig.fromYaml(yaml);
 
@@ -126,10 +146,12 @@ firebaseProjectId: test-project
     });
 
     test('uses default dartOptionsOut when not provided', () {
-      final yaml = loadYaml('''
+      final yaml =
+          loadYaml('''
 name: custom
 firebaseProjectId: test-project
-''') as YamlMap;
+''')
+              as YamlMap;
 
       final config = FlavorConfig.fromYaml(yaml);
 
@@ -137,10 +159,12 @@ firebaseProjectId: test-project
     });
 
     test('uses default androidSrcDir when not provided', () {
-      final yaml = loadYaml('''
+      final yaml =
+          loadYaml('''
 name: custom
 firebaseProjectId: test-project
-''') as YamlMap;
+''')
+              as YamlMap;
 
       final config = FlavorConfig.fromYaml(yaml);
 
@@ -148,10 +172,12 @@ firebaseProjectId: test-project
     });
 
     test('uses default iosConfigDir when not provided', () {
-      final yaml = loadYaml('''
+      final yaml =
+          loadYaml('''
 name: custom
 firebaseProjectId: test-project
-''') as YamlMap;
+''')
+              as YamlMap;
 
       final config = FlavorConfig.fromYaml(yaml);
 
@@ -159,11 +185,13 @@ firebaseProjectId: test-project
     });
 
     test('sets iosBundleId to null when empty string', () {
-      final yaml = loadYaml('''
+      final yaml =
+          loadYaml('''
 name: dev
 firebaseProjectId: test-project
 iosBundleId: ''
-''') as YamlMap;
+''')
+              as YamlMap;
 
       final config = FlavorConfig.fromYaml(yaml);
 
@@ -171,11 +199,13 @@ iosBundleId: ''
     });
 
     test('preserves iosBundleId when provided', () {
-      final yaml = loadYaml('''
+      final yaml =
+          loadYaml('''
 name: dev
 firebaseProjectId: test-project
 iosBundleId: com.example.custom
-''') as YamlMap;
+''')
+              as YamlMap;
 
       final config = FlavorConfig.fromYaml(yaml);
 
@@ -183,4 +213,3 @@ iosBundleId: com.example.custom
     });
   });
 }
-

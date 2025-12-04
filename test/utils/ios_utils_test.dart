@@ -58,10 +58,7 @@ void main() {
     });
 
     test('handles multi-part flavor names', () {
-      final configs = [
-        'Debug-production',
-        'Release-production',
-      ];
+      final configs = ['Debug-production', 'Release-production'];
 
       final result = IosUtils.inferFlavorsFromBuildConfigs(configs);
 
@@ -90,11 +87,7 @@ void main() {
     });
 
     test('sorts flavors alphabetically', () {
-      final configs = [
-        'Debug-zebra',
-        'Debug-alpha',
-        'Debug-beta',
-      ];
+      final configs = ['Debug-zebra', 'Debug-alpha', 'Debug-beta'];
 
       final result = IosUtils.inferFlavorsFromBuildConfigs(configs);
 
@@ -102,10 +95,7 @@ void main() {
     });
 
     test('handles Profile build type', () {
-      final configs = [
-        'Profile-dev',
-        'Profile-staging',
-      ];
+      final configs = ['Profile-dev', 'Profile-staging'];
 
       final result = IosUtils.inferFlavorsFromBuildConfigs(configs);
 
@@ -115,11 +105,7 @@ void main() {
     });
 
     test('deduplicates flavors', () {
-      final configs = [
-        'Debug-dev',
-        'Release-dev',
-        'Profile-dev',
-      ];
+      final configs = ['Debug-dev', 'Release-dev', 'Profile-dev'];
 
       final result = IosUtils.inferFlavorsFromBuildConfigs(configs);
 
@@ -128,4 +114,3 @@ void main() {
     });
   });
 }
-

@@ -26,9 +26,11 @@ void main() {
     // - GradleParser.extractProductFlavors()
     // - YamlGenerator.generateContent()
 
-    test('placeholder - init command logic requires refactoring for unit tests', () {
-      expect(true, isTrue);
-    });
+    test(
+      'placeholder - init command logic requires refactoring for unit tests',
+      () {
+        expect(true, isTrue);
+      },
+    );
   });
 }
-

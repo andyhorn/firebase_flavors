@@ -34,4 +34,3 @@ class DefaultFileSystem implements FileSystem {
   @override
   String getAbsolutePath(String path) => File(path).absolute.path;
 }
-
