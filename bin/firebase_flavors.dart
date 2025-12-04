@@ -5,6 +5,7 @@ import 'package:args/args.dart';
 import 'src/configure.dart';
 import 'src/get_pubspec_version.dart';
 import 'src/init.dart';
+import 'src/list.dart';
 import 'src/logger.dart';
 import 'src/models/arg_parser.dart';
 
@@ -37,7 +38,7 @@ void main(List<String> arguments) async {
 
     if (results.rest.isEmpty) {
       logError('No command provided');
-      logInfo('Available commands: init, configure');
+      logInfo('Available commands: init, configure, list');
       logInfo('Use --help for more information.');
       printUsage(argParser);
       return;
@@ -48,6 +49,11 @@ void main(List<String> arguments) async {
     if (command == 'init') {
       logInfo('Initializing firebase_flavors configuration...');
       await init(force: results.flag('force'));
+      return;
+    }
+
+    if (command == 'list') {
+      await listFlavors();
       return;
     }
 
@@ -79,7 +85,7 @@ void main(List<String> arguments) async {
     }
 
     logError('Unknown command: $command');
-    logInfo('Available commands: init, configure');
+    logInfo('Available commands: init, configure, list');
     logInfo('Use --help for more information.');
     printUsage(argParser);
   } on FormatException catch (e) {
