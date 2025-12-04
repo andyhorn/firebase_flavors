@@ -12,9 +12,10 @@ Future<void> configure(
   List<String> flavors, {
   bool skipFirebase = false,
   bool skipXcode = false,
+  required String configPath,
 }) async {
-  logInfo('Reading configuration from firebase_flavors.yaml...');
-  final config = _readConfig();
+  logInfo('Reading configuration from $configPath...');
+  final config = _readConfig(configPath);
   logSuccess('Configuration loaded successfully');
 
   if (flavors.isEmpty) {
@@ -31,7 +32,7 @@ Future<void> configure(
     if (config.flavors[flavor] == null) {
       logWarning('Flavor "$flavor" not found in configuration. Skipping.');
       logInfo('Available flavors: ${config.flavors.keys.join(', ')}');
-      logInfo('Add this flavor to firebase_flavors.yaml or check for typos.');
+      logInfo('Add this flavor to $configPath or check for typos.');
       return false;
     }
 
@@ -86,8 +87,8 @@ Future<void> configure(
   logSuccess('All flavors configured');
 }
 
-GlobalConfig _readConfig() {
-  final file = File('firebase_flavors.yaml');
+GlobalConfig _readConfig(String configPath) {
+  final file = File(configPath);
 
   if (!file.existsSync()) {
     final absolutePath = file.absolute.path;

@@ -45,15 +45,16 @@ void main(List<String> arguments) async {
     }
 
     final command = results.rest.first.toLowerCase();
+    final configPath = results['config'] as String;
 
     if (command == 'init') {
       logInfo('Initializing firebase_flavors configuration...');
-      await init(force: results.flag('force'));
+      await init(force: results.flag('force'), configPath: configPath);
       return;
     }
 
     if (command == 'list') {
-      await listFlavors();
+      await listFlavors(configPath: configPath);
       return;
     }
 
@@ -80,6 +81,7 @@ void main(List<String> arguments) async {
         flavors,
         skipFirebase: skipFirebase,
         skipXcode: skipXcode,
+        configPath: configPath,
       );
       return;
     }

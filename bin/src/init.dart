@@ -21,8 +21,8 @@ class _DetectionResult {
   final List<String>? iosBuildConfigs;
 }
 
-Future<void> init({bool force = false}) async {
-  final yamlFile = File('firebase_flavors.yaml');
+Future<void> init({bool force = false, required String configPath}) async {
+  final yamlFile = File(configPath);
 
   if (yamlFile.existsSync() && !force) {
     logError(

@@ -25,5 +25,11 @@ ArgParser getArgParser() {
       'skip-xcode',
       negatable: false,
       help: 'Skip Xcode script setup.',
+    )
+    ..addOption(
+      'config',
+      abbr: 'c',
+      help: 'Path to configuration file (default: firebase_flavors.yaml).',
+      defaultsTo: 'firebase_flavors.yaml',
     );
 }

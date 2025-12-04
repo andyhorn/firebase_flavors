@@ -6,9 +6,9 @@ import 'logger.dart';
 import 'models/global_config.dart';
 
 /// Lists all configured flavors and their details.
-Future<void> listFlavors() async {
-  logInfo('Reading configuration from firebase_flavors.yaml...');
-  final config = _readConfig();
+Future<void> listFlavors({required String configPath}) async {
+  logInfo('Reading configuration from $configPath...');
+  final config = _readConfig(configPath);
   logSuccess('Configuration loaded successfully');
   print('');
 
@@ -75,12 +75,12 @@ Future<void> listFlavors() async {
   }
 }
 
-GlobalConfig _readConfig() {
-  final file = File('firebase_flavors.yaml');
+GlobalConfig _readConfig(String configPath) {
+  final file = File(configPath);
 
   if (!file.existsSync()) {
     final absolutePath = file.absolute.path;
-    logError('Configuration file firebase_flavors.yaml not found.');
+    logError('Configuration file $configPath not found.');
     logInfo('Expected location: $absolutePath');
     logInfo('Run "firebase_flavors init" to create a configuration file.');
     logInfo(
@@ -107,9 +107,7 @@ GlobalConfig _readConfig() {
     );
     if (e is ArgumentError) {
       logInfo('Configuration error: ${e.message}');
-      logInfo(
-        'Please check your firebase_flavors.yaml file for syntax errors.',
-      );
+      logInfo('Please check your $configPath file for syntax errors.');
     } else if (e.toString().contains('YAML')) {
       logInfo(
         'YAML syntax error detected. Please verify your configuration file format.',
