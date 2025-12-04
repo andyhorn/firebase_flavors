@@ -27,6 +27,16 @@ Future<void> ensureIosGoogleServicesRunScript(GlobalConfig config) async {
       config.iosConfigBase,
     );
 
+    // Build mapping from flavor name to iosConfigDir
+    // Format: "flavor1:iosConfigDir1,flavor2:iosConfigDir2"
+    final flavorToConfigDirMap = <String, String>{};
+    for (final entry in config.flavors.entries) {
+      flavorToConfigDirMap[entry.key] = entry.value.iosConfigDir;
+    }
+    final flavorMapping = flavorToConfigDirMap.entries
+        .map((e) => '${e.key}:${e.value}')
+        .join(',');
+
     // Convert to absolute path for reliability across working directories
     final absoluteXcodeprojPath = xcodeprojDir.absolute.path;
 
@@ -35,6 +45,7 @@ Future<void> ensureIosGoogleServicesRunScript(GlobalConfig config) async {
       absoluteXcodeprojPath,
       config.iosTarget,
       configBaseRelative,
+      flavorMapping,
     ]);
 
     final stdoutText = (result.stdout ?? '').toString().trim();
@@ -104,10 +115,10 @@ String _configBaseRelativeToProjectDir(String configBase) {
 String _rubyScriptContents() => r'''
 #!/usr/bin/env ruby
 
-project_path, target_name, config_base = ARGV
+project_path, target_name, config_base, flavor_mapping = ARGV
 
-if project_path.nil? || target_name.nil? || config_base.nil?
-  warn 'Usage: ruby add_copy_google_services.rb <project_path> <target_name> <config_base>'
+if project_path.nil? || target_name.nil? || config_base.nil? || flavor_mapping.nil?
+  warn 'Usage: ruby add_copy_google_services.rb <project_path> <target_name> <config_base> <flavor_mapping>'
   exit 1
 end
 
@@ -133,10 +144,31 @@ end
 
 script_name = 'Copy GoogleService-Info.plist for Flavor'
 
+# Parse flavor mapping: "flavor1:iosConfigDir1,flavor2:iosConfigDir2"
+flavor_map = {}
+flavor_mapping.split(',').each do |pair|
+  flavor_name, ios_config_dir = pair.split(':', 2)
+  flavor_map[flavor_name] = ios_config_dir if flavor_name && ios_config_dir
+end
+
+# Generate bash script with flavor mapping
+flavor_map_script = flavor_map.map { |flavor, config_dir|
+  "    [\"#{flavor}\"]=\"#{config_dir}\""
+}.join("\n")
+
 shell_script = <<~SCRIPT
   FLAVOR_NAME="${CONFIGURATION#*-}"
   CONFIG_BASE="${PROJECT_DIR}/#{config_base}"
-  PLIST_SOURCE="${CONFIG_BASE}/${FLAVOR_NAME}/GoogleService-Info.plist"
+  
+  # Map flavor name to iosConfigDir
+  declare -A FLAVOR_TO_CONFIG_DIR=(
+#{flavor_map_script}
+  )
+  
+  # Get the config directory for this flavor, fallback to flavor name if not found
+  IOS_CONFIG_DIR="${FLAVOR_TO_CONFIG_DIR[$FLAVOR_NAME]:-$FLAVOR_NAME}"
+  
+  PLIST_SOURCE="${CONFIG_BASE}/${IOS_CONFIG_DIR}/GoogleService-Info.plist"
   PLIST_DESTINATION="${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.app/GoogleService-Info.plist"
 
   if [ -f "${PLIST_SOURCE}" ]; then
