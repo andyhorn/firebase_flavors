@@ -4,10 +4,9 @@ import 'logger.dart';
 
 String getPubspecVersion() {
   final pubspec = File('pubspec.yaml');
-  
+
   if (!pubspec.existsSync()) {
-    logError('pubspec.yaml not found');
-    return 'unknown';
+    throw Exception('pubspec.yaml not found');
   }
 
   try {
