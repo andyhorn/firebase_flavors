@@ -127,7 +127,7 @@ Future<void> _configureFlavor(
       '--android-out=${config.androidSrcBase}/${flavorConfig.androidSrcDir}/google-services.json',
     ],
     if (ios) ...[
-      '--ios-bundle-id=${config.baseBundleId}',
+      '--ios-bundle-id=${flavorConfig.iosBundleId ?? config.baseBundleId}',
       '--ios-out=${config.iosConfigBase}/${flavorConfig.iosConfigDir}/GoogleService-Info.plist',
       '--ios-build-config=Debug-${flavorConfig.name}',
     ],
@@ -136,9 +136,15 @@ Future<void> _configureFlavor(
 
   logDebug('Running flutterfire with args: ${args.join(' ')}');
   logInfo('Project: ${flavorConfig.firebaseProjectId}');
-  logDebug(
-    'Android package: ${config.baseBundleId}${flavorConfig.androidPackageSuffix}',
-  );
+  if (android) {
+    logDebug(
+      'Android package: ${config.baseBundleId}${flavorConfig.androidPackageSuffix}',
+    );
+  }
+  if (ios) {
+    final iosBundleId = flavorConfig.iosBundleId ?? config.baseBundleId;
+    logDebug('iOS bundle ID: $iosBundleId');
+  }
   logDebug('Dart options out: ${flavorConfig.dartOptionsOut}');
 
   Process process;

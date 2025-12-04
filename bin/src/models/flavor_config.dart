@@ -9,6 +9,7 @@ class FlavorConfig {
     required this.androidSrcDir,
     required this.iosConfigDir,
     required this.platforms,
+    this.iosBundleId,
   });
 
   factory FlavorConfig.fromYaml(YamlMap map) {
@@ -25,6 +26,7 @@ class FlavorConfig {
     final androidSrcDir = map['androidSrcDir'] as String? ?? name;
     final iosConfigDir = map['iosConfigDir'] as String? ?? name;
     final platforms = map['platforms'] as String?;
+    final iosBundleId = map['iosBundleId'] as String?;
 
     return FlavorConfig(
       name: name,
@@ -37,6 +39,7 @@ class FlavorConfig {
       androidSrcDir: androidSrcDir,
       iosConfigDir: iosConfigDir,
       platforms: platforms,
+      iosBundleId: iosBundleId?.isEmpty == true ? null : iosBundleId,
     );
   }
 
@@ -47,4 +50,5 @@ class FlavorConfig {
   final String androidSrcDir;
   final String iosConfigDir;
   final String? platforms;
+  final String? iosBundleId;
 }
