@@ -2,10 +2,16 @@ import 'dart:io';
 
 import 'logger.dart';
 import 'models/global_config.dart';
+import 'utils/ios_utils.dart';
+import 'utils/process_runner.dart';
 
 /// Ensures the Xcode project has a run script that copies the
 /// flavor-specific GoogleService-Info.plist into the build output.
-Future<void> ensureIosGoogleServicesRunScript(GlobalConfig config) async {
+Future<void> ensureIosGoogleServicesRunScript(
+  GlobalConfig config, {
+  ProcessRunner? processRunner,
+}) async {
+  final runner = processRunner ?? DefaultProcessRunner();
   final xcodeprojPath = config.iosXcodeprojPath;
   final xcodeprojDir = Directory(xcodeprojPath);
 
@@ -25,7 +31,7 @@ Future<void> ensureIosGoogleServicesRunScript(GlobalConfig config) async {
   try {
     rubyScriptFile.writeAsStringSync(_rubyScriptContents());
 
-    final configBaseRelative = _configBaseRelativeToProjectDir(
+    final configBaseRelative = IosUtils.configBaseRelativeToProjectDir(
       config.iosConfigBase,
     );
 
@@ -42,7 +48,7 @@ Future<void> ensureIosGoogleServicesRunScript(GlobalConfig config) async {
     // Convert to absolute path for reliability across working directories
     final absoluteXcodeprojPath = xcodeprojDir.absolute.path;
 
-    final result = await Process.run('ruby', [
+    final result = await runner.run('ruby', [
       rubyScriptFile.path,
       absoluteXcodeprojPath,
       config.iosTarget,
@@ -104,15 +110,6 @@ Future<void> ensureIosGoogleServicesRunScript(GlobalConfig config) async {
   }
 }
 
-String _configBaseRelativeToProjectDir(String configBase) {
-  // The Xcode build phase runs from within the ios directory,
-  // so strip a leading "ios/" when present.
-  if (configBase.startsWith('ios/')) {
-    return configBase.substring(4);
-  }
-
-  return configBase;
-}
 
 String _rubyScriptContents() => r'''
 #!/usr/bin/env ruby

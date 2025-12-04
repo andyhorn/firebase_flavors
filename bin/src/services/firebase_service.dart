@@ -3,9 +3,14 @@ import 'dart:io';
 import '../logger.dart';
 import '../models/flavor_config.dart';
 import '../models/global_config.dart';
+import '../utils/process_runner.dart';
 
 /// Service for interacting with the Firebase CLI (flutterfire).
 class FirebaseService {
+  final ProcessRunner _processRunner;
+
+  FirebaseService({ProcessRunner? processRunner})
+      : _processRunner = processRunner ?? DefaultProcessRunner();
   /// Configures a flavor using flutterfire CLI.
   ///
   /// [config] - Global configuration
@@ -54,7 +59,7 @@ class FirebaseService {
 
     Process process;
     try {
-      process = await Process.start(
+      process = await _processRunner.start(
         'flutterfire',
         args,
         mode: ProcessStartMode.inheritStdio,

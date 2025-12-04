@@ -1,6 +1,9 @@
 import 'dart:io';
 
 import 'logger.dart';
+import 'utils/gradle_parser.dart';
+import 'utils/ios_utils.dart';
+import 'utils/yaml_generator.dart';
 
 /// Holds all detected values from Android or iOS project files.
 class _DetectionResult {
@@ -106,7 +109,7 @@ Future<void> init({bool force = false, required String configPath}) async {
   }
 
   logInfo('Generating configuration file...');
-  final yamlContent = _generateYamlContent(
+  final yamlContent = YamlGenerator.generateContent(
     baseBundleId: baseBundleId,
     appName: appName,
     flavors: flavors,
@@ -153,9 +156,9 @@ _DetectionResult? _detectFromAndroidGradle(
   try {
     logDebug('Reading Gradle file: ${file.path}');
     final content = file.readAsStringSync();
-    final baseBundleId = _extractApplicationId(content);
-    final flavorData = _extractProductFlavors(content, isKts);
-    final appName = _extractAppNameFromGradle(content);
+    final baseBundleId = GradleParser.extractApplicationId(content);
+    final flavorData = GradleParser.extractProductFlavors(content, isKts);
+    final appName = GradleParser.extractAppName(content);
 
     if (baseBundleId != null) {
       logDebug('Extracted application ID: $baseBundleId');
@@ -178,111 +181,6 @@ _DetectionResult? _detectFromAndroidGradle(
     // Silently fail and return null to allow fallback to iOS
     return null;
   }
-}
-
-/// Extracts the base applicationId from gradle content.
-/// Supports both `applicationId` and `namespace` properties.
-String? _extractApplicationId(String gradleContent) {
-  // Try applicationId first (in defaultConfig or android block)
-  final applicationIdPattern =
-      '(?:defaultConfig|android)\\s*\\{[\\s\\S]*?applicationId\\s*[=:]\\s*["\']([^\'"]+)["\']';
-  final applicationIdRegex = RegExp(applicationIdPattern, multiLine: true);
-  final applicationIdMatch = applicationIdRegex.firstMatch(gradleContent);
-  if (applicationIdMatch != null) {
-    return applicationIdMatch.group(1);
-  }
-
-  // Fallback to namespace (for newer Gradle files)
-  final namespacePattern = 'namespace\\s*[=:]\\s*["\']([^\'"]+)["\']';
-  final namespaceRegex = RegExp(namespacePattern, multiLine: true);
-  final namespaceMatch = namespaceRegex.firstMatch(gradleContent);
-  if (namespaceMatch != null) {
-    return namespaceMatch.group(1);
-  }
-
-  return null;
-}
-
-/// Extracts product flavors and their applicationIdSuffix values.
-/// Returns a map of flavor name -> suffix (empty string if no suffix).
-Map<String, String> _extractProductFlavors(String gradleContent, bool isKts) {
-  final flavors = <String, String>{};
-
-  // Find the productFlavors block
-  final flavorsBlockPattern = r'productFlavors\s*\{((?:[^{}]|\{[^{}]*\})*)\}';
-  final flavorsBlockRegex = RegExp(flavorsBlockPattern);
-  final flavorsBlockMatch = flavorsBlockRegex.firstMatch(gradleContent);
-  if (flavorsBlockMatch == null) {
-    return flavors;
-  }
-
-  final flavorsBlockBody = flavorsBlockMatch.group(1)!;
-
-  if (isKts) {
-    // Kotlin DSL: create("flavorName") { ... }
-    final createFlavorPattern =
-        'create\\s*\\(\\s*["\']([A-Za-z0-9_]+)["\']\\s*\\)\\s*\\{([^{}]*(?:\\{[^{}]*\\}[^{}]*)*)\\}';
-    final createFlavorRegex = RegExp(createFlavorPattern);
-
-    for (final match in createFlavorRegex.allMatches(flavorsBlockBody)) {
-      final flavorName = match.group(1)!;
-      final flavorBody = match.group(2) ?? '';
-
-      // Extract applicationIdSuffix from flavor body
-      final suffixPattern =
-          'applicationIdSuffix\\s*[=:]\\s*["\']([^\'"]*)["\']';
-      final suffixRegex = RegExp(suffixPattern);
-      final suffixMatch = suffixRegex.firstMatch(flavorBody);
-      var suffix = suffixMatch?.group(1) ?? '';
-
-      // Strip any leading dot when parsing (will be normalized later)
-      if (suffix.isNotEmpty && suffix.startsWith('.')) {
-        suffix = suffix.substring(1);
-      }
-
-      flavors[flavorName] = suffix.isEmpty ? '' : suffix;
-    }
-  } else {
-    // Groovy DSL: flavorName { ... }
-    final flavorNamePattern =
-        r'\b([A-Za-z0-9_]+)\s*\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}';
-    final flavorNameRegex = RegExp(flavorNamePattern);
-
-    for (final match in flavorNameRegex.allMatches(flavorsBlockBody)) {
-      final flavorName = match.group(1)!;
-      final flavorBody = match.group(2) ?? '';
-
-      // Extract applicationIdSuffix from flavor body
-      final suffixPattern =
-          'applicationIdSuffix\\s*[=:]\\s*["\']([^\'"]*)["\']';
-      final suffixRegex = RegExp(suffixPattern);
-      final suffixMatch = suffixRegex.firstMatch(flavorBody);
-      var suffix = suffixMatch?.group(1) ?? '';
-
-      // Strip any leading dot when parsing (will be normalized later)
-      if (suffix.isNotEmpty && suffix.startsWith('.')) {
-        suffix = suffix.substring(1);
-      }
-
-      flavors[flavorName] = suffix.isEmpty ? '' : suffix;
-    }
-  }
-
-  return flavors;
-}
-
-/// Extracts app name from manifestPlaceholders in gradle content.
-String? _extractAppNameFromGradle(String gradleContent) {
-  // Look for manifestPlaceholders["appName"] = "App Name"
-  final appNamePattern =
-      'manifestPlaceholders\\s*\\["appName"\\]\\s*[=:]\\s*["\']([^\'"]+)["\']';
-  final appNameRegex = RegExp(appNamePattern, multiLine: true);
-  final appNameMatch = appNameRegex.firstMatch(gradleContent);
-  if (appNameMatch != null) {
-    return appNameMatch.group(1);
-  }
-
-  return null;
 }
 
 /// Detects values from iOS project files (project.pbxproj and Info.plist).
@@ -377,7 +275,7 @@ _DetectionResult? _detectFromIOSProject() {
       appName != null ||
       (iosBuildConfigs != null && iosBuildConfigs.isNotEmpty)) {
     // Try to infer flavors from build configurations
-    final flavors = _inferFlavorsFromBuildConfigs(iosBuildConfigs);
+    final flavors = IosUtils.inferFlavorsFromBuildConfigs(iosBuildConfigs);
 
     return _DetectionResult(
       baseBundleId: baseBundleId,
@@ -509,114 +407,4 @@ String? _extractAppNameFromInfoPlist(File infoPlistFile) {
   }
 
   return null;
-}
-
-/// Infers flavor names from iOS build configuration names.
-/// E.g., "Debug-production", "Release-staging" -> ["production", "staging"]
-List<String> _inferFlavorsFromBuildConfigs(List<String>? buildConfigs) {
-  if (buildConfigs == null || buildConfigs.isEmpty) {
-    return [];
-  }
-
-  final flavors = <String>{};
-  for (final config in buildConfigs) {
-    // Extract flavor from config names like "Debug-production", "Release-staging"
-    final parts = config.split('-');
-    if (parts.length > 1) {
-      // Skip the build type (Debug/Release/Profile) and get the flavor
-      final flavor = parts.sublist(1).join('-');
-      if (flavor.isNotEmpty) {
-        flavors.add(flavor);
-      }
-    }
-  }
-
-  return flavors.toList()..sort();
-}
-
-/// Generates the YAML configuration file content.
-String _generateYamlContent({
-  required String baseBundleId,
-  required String appName,
-  required List<String> flavors,
-  required Map<String, String> flavorSuffixes,
-  String? iosTarget,
-  List<String>? iosBuildConfigs,
-}) {
-  final buffer = StringBuffer();
-
-  buffer.writeln(
-    '# Firebase flavor configuration generated by firebase_flavor_tool init',
-  );
-  buffer.writeln('# Review and edit as needed.');
-  buffer.writeln('');
-  buffer.writeln('appName: $appName');
-  buffer.writeln('baseBundleId: $baseBundleId');
-  buffer.writeln('');
-  buffer.writeln('android:');
-  buffer.writeln('  srcBase: android/app/src');
-  buffer.writeln('');
-  buffer.writeln('ios:');
-  buffer.writeln('  xcodeprojPath: ios/${iosTarget ?? 'Runner'}.xcodeproj');
-  buffer.writeln('  target: ${iosTarget ?? 'Runner'}');
-  buffer.writeln('  configBase: ios/${iosTarget ?? 'Runner'}/Config');
-  buffer.writeln('');
-  buffer.writeln('flavors:');
-
-  for (final flavor in flavors) {
-    // Use detected suffix if available, otherwise infer from flavor name
-    String suffix;
-    if (flavorSuffixes.containsKey(flavor)) {
-      suffix = flavorSuffixes[flavor]!;
-    } else {
-      final isProdLike =
-          flavor.toLowerCase() == 'prod' ||
-          flavor.toLowerCase() == 'production';
-      suffix = isProdLike ? '' : flavor;
-    }
-
-    final optionsOut = 'lib/firebase_options_$flavor.dart';
-    final androidSrcDir = flavor;
-    final iosConfigDir = flavor;
-
-    buffer.writeln('  $flavor:');
-    buffer.writeln(
-      '    firebaseProjectId: your-firebase-project-id-for-$flavor',
-    );
-    buffer.writeln('    androidPackageSuffix: $suffix');
-    buffer.writeln('    dartOptionsOut: $optionsOut');
-    buffer.writeln('    androidSrcDir: $androidSrcDir');
-    buffer.writeln('    iosConfigDir: $iosConfigDir');
-    buffer.writeln('    # Optional: override iOS bundle ID for this flavor.');
-    buffer.writeln('    # iosBundleId: com.example.app.$flavor');
-
-    // Use detected build configs if available, otherwise generate defaults
-    buffer.writeln('    iosBuildConfigs:');
-    if (iosBuildConfigs != null && iosBuildConfigs.isNotEmpty) {
-      // Filter configs for this flavor
-      final flavorConfigs = iosBuildConfigs
-          .where(
-            (config) => config.toLowerCase().contains(flavor.toLowerCase()),
-          )
-          .toList();
-      if (flavorConfigs.isNotEmpty) {
-        for (final config in flavorConfigs) {
-          buffer.writeln('      - $config');
-        }
-      } else {
-        // Fallback to default pattern
-        buffer.writeln('      - Debug-$flavor');
-        buffer.writeln('      - Release-$flavor');
-        buffer.writeln('      - Profile-$flavor');
-      }
-    } else {
-      // Default pattern
-      buffer.writeln('      - Debug-$flavor');
-      buffer.writeln('      - Release-$flavor');
-      buffer.writeln('      - Profile-$flavor');
-    }
-    buffer.writeln('');
-  }
-
-  return buffer.toString();
 }
