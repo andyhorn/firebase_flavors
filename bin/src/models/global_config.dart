@@ -13,7 +13,7 @@ class GlobalConfig {
     required this.flavors,
   });
 
-  factory GlobalConfig.fromMap(Map<String, dynamic> map) {
+  factory GlobalConfig.fromYaml(YamlMap map) {
     return GlobalConfig(
       appName: map['appName'] as String,
       baseBundleId: map['baseBundleId'] as String,
@@ -31,10 +31,9 @@ class GlobalConfig {
           (map['flavors'] as YamlMap?)?.map(
             (key, value) => MapEntry(
               key,
-              FlavorConfig.fromMap({
-                ...value as Map<String, dynamic>,
-                'name': key,
-              }),
+              FlavorConfig.fromYaml(
+                YamlMap.wrap({...value as YamlMap, 'name': key}),
+              ),
             ),
           ) ??
           {},

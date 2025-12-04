@@ -1,3 +1,5 @@
+import 'package:yaml/yaml.dart';
+
 class FlavorConfig {
   const FlavorConfig({
     required this.name,
@@ -9,7 +11,7 @@ class FlavorConfig {
     required this.platforms,
   });
 
-  factory FlavorConfig.fromMap(Map<String, dynamic> map) {
+  factory FlavorConfig.fromYaml(YamlMap map) {
     final name = map['name'] as String;
     final firebaseProjectId = map['firebaseProjectId'] as String?;
 

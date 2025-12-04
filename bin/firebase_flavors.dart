@@ -88,9 +88,9 @@ Future<void> _configure(List<String> flavors) async {
 GlobalConfig _readConfig() {
   final file = File('firebase_flavors.yaml');
   final content = file.readAsStringSync();
-  final yaml = loadYaml(content) as Map<String, dynamic>;
+  final yaml = loadYaml(content) as YamlMap;
 
-  return GlobalConfig.fromMap(yaml);
+  return GlobalConfig.fromYaml(yaml);
 }
 
 Future<void> _configureFlavor(
