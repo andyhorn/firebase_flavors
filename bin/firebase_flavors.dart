@@ -53,9 +53,11 @@ void main(List<String> arguments) async {
         return;
       }
 
-      final flavors = results.rest.length == 1
-          ? const <String>[]
-          : results.rest[1].split(',').map((e) => e.trim()).toList();
+      final flavors = <String>[];
+
+      if (results.rest.length > 1) {
+        flavors.addAll(results.rest[1].split(',').map((e) => e.trim()));
+      }
 
       await _configure(flavors);
       return;
