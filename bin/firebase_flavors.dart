@@ -56,6 +56,9 @@ void main(List<String> arguments) async {
         return;
       }
 
+      final skipFirebase = results.flag('skip-firebase');
+      final skipXcode = results.flag('skip-xcode');
+
       final flavors = <String>[];
 
       if (results.rest.length > 1) {
@@ -63,7 +66,11 @@ void main(List<String> arguments) async {
       }
 
       logInfo('Configuring Firebase flavors...');
-      await configure(flavors);
+      await configure(
+        flavors,
+        skipFirebase: skipFirebase,
+        skipXcode: skipXcode,
+      );
       return;
     }
 

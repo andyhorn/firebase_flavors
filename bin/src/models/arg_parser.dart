@@ -15,5 +15,15 @@ ArgParser getArgParser() {
       help: 'Show additional command output.',
     )
     ..addFlag('version', negatable: false, help: 'Print the tool version.')
-    ..addFlag('force', help: 'Overwrite existing files.');
+    ..addFlag('force', help: 'Overwrite existing files.')
+    ..addFlag(
+      'skip-firebase',
+      negatable: false,
+      help: 'Skip Firebase configuration.',
+    )
+    ..addFlag(
+      'skip-xcode',
+      negatable: false,
+      help: 'Skip Xcode script setup.',
+    );
 }

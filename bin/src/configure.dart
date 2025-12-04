@@ -7,7 +7,11 @@ import 'logger.dart';
 import 'models/flavor_config.dart';
 import 'models/global_config.dart';
 
-Future<void> configure(List<String> flavors) async {
+Future<void> configure(
+  List<String> flavors, {
+  bool skipFirebase = false,
+  bool skipXcode = false,
+}) async {
   logInfo('Reading configuration from firebase_flavors.yaml...');
   final config = _readConfig();
   logSuccess('Configuration loaded successfully');
@@ -21,27 +25,45 @@ Future<void> configure(List<String> flavors) async {
     logInfo('Configuring flavors: ${flavors.join(', ')}');
   }
 
-  var configuredIos = false;
-  for (final flavor in flavors) {
-    final flavorConfig = config.flavors[flavor];
-    if (flavorConfig == null) {
+  // Filter invalid flavors and log warnings
+  final flavorsToRun = flavors.where((flavor) {
+    if (config.flavors[flavor] == null) {
       logWarning('Flavor "$flavor" not found in configuration. Skipping.');
-      continue;
+      return false;
     }
 
-    final platformNames = _normalizePlatforms(flavorConfig.platforms);
-    configuredIos =
-        configuredIos || platformNames.isEmpty || platformNames.contains('ios');
+    return true;
+  });
 
-    logInfo('Configuring flavor: $flavor');
-    await _configureFlavor(config, flavorConfig, platformNames);
-    logSuccess('Flavor "$flavor" configured successfully');
+  // Check if any flavors have an iOS platform
+  final configuredIos = flavorsToRun.any((flavor) {
+    final names = _normalizePlatforms(config.flavors[flavor]!.platforms);
+    return names.isEmpty || names.contains('ios');
+  });
+
+  // Run Firebase configuration unless skip-firebase is specified
+  if (!skipFirebase) {
+    for (final flavor in flavors) {
+      final flavorConfig = config.flavors[flavor]!;
+      final platformNames = _normalizePlatforms(flavorConfig.platforms);
+
+      logInfo('Configuring flavor: $flavor');
+      await _configureFlavor(config, flavorConfig, platformNames);
+      logSuccess('Flavor "$flavor" configured successfully');
+    }
+  } else {
+    logDebug('Skipping Firebase configuration (--skip-firebase flag set).');
   }
 
-  if (configuredIos) {
-    await ensureIosGoogleServicesRunScript(config);
+  // Run Xcode script setup unless skip-xcode is specified
+  if (!skipXcode) {
+    if (configuredIos) {
+      await ensureIosGoogleServicesRunScript(config);
+    } else {
+      logDebug('No iOS flavors selected, skipping Xcode run script setup.');
+    }
   } else {
-    logDebug('No iOS flavors selected, skipping Xcode run script setup.');
+    logDebug('Skipping Xcode run script setup (--skip-xcode flag set).');
   }
 
   logSuccess('All flavors configured');
