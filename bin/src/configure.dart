@@ -43,7 +43,7 @@ Future<void> configure(
 
   // Run Firebase configuration unless skip-firebase is specified
   if (!skipFirebase) {
-    for (final flavor in flavors) {
+    for (final flavor in flavorsToRun) {
       final flavorConfig = config.flavors[flavor]!;
       final platformNames = _normalizePlatforms(flavorConfig.platforms);
 
