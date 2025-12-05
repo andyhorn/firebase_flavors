@@ -52,8 +52,8 @@ class YamlGenerator {
       buffer.writeln('    dartOptionsOut: $optionsOut');
       buffer.writeln('    androidSrcDir: $androidSrcDir');
       buffer.writeln('    iosConfigDir: $iosConfigDir');
-      buffer.writeln('    # Optional: override iOS bundle ID for this flavor.');
-      buffer.writeln('    # iosBundleId: com.example.app.$flavor');
+      buffer.writeln('    # Optional: iOS bundle ID suffix for this flavor.');
+      buffer.writeln('    # iosBundleSuffix: $flavor');
       buffer.writeln('');
     }
 

@@ -257,7 +257,7 @@ flavors:
     androidSrcDir: dev  # Optional, default: {flavor}
     iosConfigDir: dev  # Optional, default: {flavor}
     platforms: android,ios  # Optional, default: null (all platforms)
-    iosBundleId: com.example.app.dev  # Optional, default: null (uses baseBundleId)
+    iosBundleSuffix: dev  # Optional, default: null (no suffix)
   
   prod:
     firebaseProjectId: my-prod-project-id  # Required
@@ -290,7 +290,7 @@ flavors:
 - `androidSrcDir` (optional): Directory name under `android/srcBase` where `google-services.json` will be placed. Default: `{flavor}` (the flavor name)
 - `iosConfigDir` (optional): Directory name under `ios.configBase` where `GoogleService-Info.plist` will be placed. Default: `{flavor}` (the flavor name)
 - `platforms` (optional): Comma-separated list of platforms (`android`, `ios`). If omitted or empty, all platforms are configured. Default: `null` (all platforms)
-- `iosBundleId` (optional): Override iOS bundle ID for this flavor. If omitted or empty, uses `baseBundleId`. Default: `null` (uses `baseBundleId`)
+- `iosBundleSuffix` (optional): Suffix to append to base bundle ID for iOS (e.g., `.dev`, `.staging`). Default: `null` (no suffix). If provided without a leading dot, one will be added automatically
 
 ## Examples
 

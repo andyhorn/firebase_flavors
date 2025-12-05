@@ -9,7 +9,7 @@ class FlavorConfig {
     required this.androidSrcDir,
     required this.iosConfigDir,
     required this.platforms,
-    this.iosBundleId,
+    this.iosBundleSuffix,
   });
 
   factory FlavorConfig.fromYaml(YamlMap map) {
@@ -26,28 +26,39 @@ class FlavorConfig {
     final androidSrcDir = map['androidSrcDir'] as String? ?? name;
     final iosConfigDir = map['iosConfigDir'] as String? ?? name;
     final platforms = map['platforms'] as String?;
-    final iosBundleId = map['iosBundleId'] as String?;
-
-    String? normalizedSuffix;
-    if (androidPackageSuffix == null || androidPackageSuffix.isEmpty) {
-      normalizedSuffix = null;
-    } else {
-      final suffix = androidPackageSuffix.startsWith('.')
-          ? androidPackageSuffix
-          : '.$androidPackageSuffix';
-      normalizedSuffix = suffix;
-    }
+    final iosBundleSuffix = map['iosBundleSuffix'] as String?;
 
     return FlavorConfig(
       name: name,
       firebaseProjectId: firebaseProjectId!,
-      androidPackageSuffix: normalizedSuffix,
+      androidPackageSuffix: _normalizeSuffix(androidPackageSuffix),
       dartOptionsOut: dartOptionsOut,
       androidSrcDir: androidSrcDir,
       iosConfigDir: iosConfigDir,
       platforms: platforms,
-      iosBundleId: iosBundleId?.isEmpty == true ? null : iosBundleId,
+      iosBundleSuffix: _normalizeSuffix(iosBundleSuffix),
     );
+  }
+
+  /// Normalizes a bundle ID suffix by ensuring it has a leading dot.
+  ///
+  /// Returns `null` if the suffix is `null` or empty.
+  /// Otherwise, returns the suffix with a leading dot (adding one if missing).
+  static String? _normalizeSuffix(String? suffix) {
+    if (suffix == null || suffix.isEmpty) {
+      return null;
+    }
+    return suffix.startsWith('.') ? suffix : '.$suffix';
+  }
+
+  /// Returns the Android bundle ID by appending the suffix to the base bundle ID.
+  String getAndroidBundleId(String baseBundleId) {
+    return baseBundleId + (androidPackageSuffix ?? '');
+  }
+
+  /// Returns the iOS bundle ID by appending the suffix to the base bundle ID.
+  String getIosBundleId(String baseBundleId) {
+    return baseBundleId + (iosBundleSuffix ?? '');
   }
 
   final String name;
@@ -57,5 +68,5 @@ class FlavorConfig {
   final String androidSrcDir;
   final String iosConfigDir;
   final String? platforms;
-  final String? iosBundleId;
+  final String? iosBundleSuffix;
 }

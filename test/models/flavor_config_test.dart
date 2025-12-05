@@ -22,7 +22,7 @@ firebaseProjectId: test-project-id
       expect(config.androidSrcDir, equals('dev'));
       expect(config.iosConfigDir, equals('dev'));
       expect(config.platforms, isNull);
-      expect(config.iosBundleId, isNull);
+      expect(config.iosBundleSuffix, isNull);
     });
 
     test('parses all fields when provided', () {
@@ -35,7 +35,7 @@ dartOptionsOut: lib/custom_options_staging.dart
 androidSrcDir: staging_android
 iosConfigDir: staging_ios
 platforms: android,ios
-iosBundleId: com.example.staging
+iosBundleSuffix: .stg
 ''')
               as YamlMap;
 
@@ -48,7 +48,7 @@ iosBundleId: com.example.staging
       expect(config.androidSrcDir, equals('staging_android'));
       expect(config.iosConfigDir, equals('staging_ios'));
       expect(config.platforms, equals('android,ios'));
-      expect(config.iosBundleId, equals('com.example.staging'));
+      expect(config.iosBundleSuffix, equals('.stg'));
     });
 
     test('throws ArgumentError when firebaseProjectId is missing', () {
@@ -184,32 +184,119 @@ firebaseProjectId: test-project
       expect(config.iosConfigDir, equals('custom'));
     });
 
-    test('sets iosBundleId to null when empty string', () {
+    test('normalizes iosBundleSuffix with leading dot', () {
       final yaml =
           loadYaml('''
 name: dev
 firebaseProjectId: test-project
-iosBundleId: ''
+iosBundleSuffix: .dev
 ''')
               as YamlMap;
 
       final config = FlavorConfig.fromYaml(yaml);
 
-      expect(config.iosBundleId, isNull);
+      expect(config.iosBundleSuffix, equals('.dev'));
     });
 
-    test('preserves iosBundleId when provided', () {
+    test('normalizes iosBundleSuffix without leading dot', () {
       final yaml =
           loadYaml('''
 name: dev
 firebaseProjectId: test-project
-iosBundleId: com.example.custom
+iosBundleSuffix: dev
 ''')
               as YamlMap;
 
       final config = FlavorConfig.fromYaml(yaml);
 
-      expect(config.iosBundleId, equals('com.example.custom'));
+      expect(config.iosBundleSuffix, equals('.dev'));
+    });
+
+    test('sets iosBundleSuffix to null when empty', () {
+      final yaml =
+          loadYaml('''
+name: prod
+firebaseProjectId: test-project
+iosBundleSuffix: ''
+''')
+              as YamlMap;
+
+      final config = FlavorConfig.fromYaml(yaml);
+
+      expect(config.iosBundleSuffix, isNull);
+    });
+
+    test('sets iosBundleSuffix to null when not provided', () {
+      final yaml =
+          loadYaml('''
+name: prod
+firebaseProjectId: test-project
+''')
+              as YamlMap;
+
+      final config = FlavorConfig.fromYaml(yaml);
+
+      expect(config.iosBundleSuffix, isNull);
+    });
+  });
+
+  group('FlavorConfig bundle ID helpers', () {
+    test('getAndroidBundleId appends suffix to base bundle ID', () {
+      final config = FlavorConfig(
+        name: 'dev',
+        firebaseProjectId: 'test-project',
+        androidPackageSuffix: '.dev',
+        dartOptionsOut: 'lib/firebase_options_dev.dart',
+        androidSrcDir: 'dev',
+        iosConfigDir: 'dev',
+        platforms: null,
+      );
+
+      expect(config.getAndroidBundleId('com.example.app'), equals('com.example.app.dev'));
+    });
+
+    test('getAndroidBundleId returns base bundle ID when suffix is null', () {
+      final config = FlavorConfig(
+        name: 'prod',
+        firebaseProjectId: 'test-project',
+        androidPackageSuffix: null,
+        dartOptionsOut: 'lib/firebase_options_prod.dart',
+        androidSrcDir: 'prod',
+        iosConfigDir: 'prod',
+        platforms: null,
+      );
+
+      expect(config.getAndroidBundleId('com.example.app'), equals('com.example.app'));
+    });
+
+    test('getIosBundleId appends suffix to base bundle ID', () {
+      final config = FlavorConfig(
+        name: 'dev',
+        firebaseProjectId: 'test-project',
+        androidPackageSuffix: null,
+        dartOptionsOut: 'lib/firebase_options_dev.dart',
+        androidSrcDir: 'dev',
+        iosConfigDir: 'dev',
+        platforms: null,
+        iosBundleSuffix: '.dev',
+      );
+
+      expect(config.getIosBundleId('com.example.app'), equals('com.example.app.dev'));
+    });
+
+    test('getIosBundleId returns base bundle ID when suffix is null', () {
+      final config = FlavorConfig(
+        name: 'prod',
+        firebaseProjectId: 'test-project',
+        androidPackageSuffix: null,
+        dartOptionsOut: 'lib/firebase_options_prod.dart',
+        androidSrcDir: 'prod',
+        iosConfigDir: 'prod',
+        platforms: null,
+        iosBundleSuffix: null,
+      );
+
+      expect(config.getIosBundleId('com.example.app'), equals('com.example.app'));
     });
   });
 }

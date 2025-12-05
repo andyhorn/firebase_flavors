@@ -36,11 +36,11 @@ class FirebaseService {
         '--platforms=${platformNames.join(',')}',
       ],
       if (android) ...[
-        '--android-package-name=${config.baseBundleId}${flavorConfig.androidPackageSuffix}',
+        '--android-package-name=${flavorConfig.getAndroidBundleId(config.baseBundleId)}',
         '--android-out=${config.androidSrcBase}/${flavorConfig.androidSrcDir}/google-services.json',
       ],
       if (ios) ...[
-        '--ios-bundle-id=${flavorConfig.iosBundleId ?? config.baseBundleId}',
+        '--ios-bundle-id=${flavorConfig.getIosBundleId(config.baseBundleId)}',
         '--ios-out=${config.iosConfigBase}/${flavorConfig.iosConfigDir}/GoogleService-Info.plist',
         '--ios-build-config=Debug-${flavorConfig.name}',
       ],
@@ -51,12 +51,11 @@ class FirebaseService {
     logInfo('Project: ${flavorConfig.firebaseProjectId}');
     if (android) {
       logDebug(
-        'Android package: ${config.baseBundleId}${flavorConfig.androidPackageSuffix}',
+        'Android package: ${flavorConfig.getAndroidBundleId(config.baseBundleId)}',
       );
     }
     if (ios) {
-      final iosBundleId = flavorConfig.iosBundleId ?? config.baseBundleId;
-      logDebug('iOS bundle ID: $iosBundleId');
+      logDebug('iOS bundle ID: ${flavorConfig.getIosBundleId(config.baseBundleId)}');
     }
     logDebug('Dart options out: ${flavorConfig.dartOptionsOut}');
 

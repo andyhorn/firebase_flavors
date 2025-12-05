@@ -48,8 +48,7 @@ Future<void> listFlavors({required String configPath}) async {
 
     // Android details
     if (platformNames.isEmpty || platformNames.contains('android')) {
-      final androidPackage =
-          config.baseBundleId + (flavorConfig.androidPackageSuffix ?? '');
+      final androidPackage = flavorConfig.getAndroidBundleId(config.baseBundleId);
       final androidPath =
           '${config.androidSrcBase}/${flavorConfig.androidSrcDir}/google-services.json';
       print('    Android:');
@@ -59,7 +58,7 @@ Future<void> listFlavors({required String configPath}) async {
 
     // iOS details
     if (platformNames.isEmpty || platformNames.contains('ios')) {
-      final iosBundleId = flavorConfig.iosBundleId ?? config.baseBundleId;
+      final iosBundleId = flavorConfig.getIosBundleId(config.baseBundleId);
       final iosPath =
           '${config.iosConfigBase}/${flavorConfig.iosConfigDir}/GoogleService-Info.plist';
       print('    iOS:');
