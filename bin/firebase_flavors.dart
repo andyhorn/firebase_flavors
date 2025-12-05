@@ -8,6 +8,7 @@ import 'src/init.dart';
 import 'src/list.dart';
 import 'src/logger.dart';
 import 'src/models/arg_parser.dart';
+import 'src/set_project_ids.dart';
 
 void printUsage(ArgParser argParser) {
   print('Usage: dart firebase_flavors.dart <flags> [arguments]');
@@ -38,7 +39,7 @@ void main(List<String> arguments) async {
 
     if (results.rest.isEmpty) {
       logError('No command provided');
-      logInfo('Available commands: init, configure, list');
+      logInfo('Available commands: init, configure, list, set-project-ids');
       logInfo('Use --help for more information.');
       printUsage(argParser);
       return;
@@ -86,8 +87,25 @@ void main(List<String> arguments) async {
       return;
     }
 
+    if (command == 'set-project-ids') {
+      final fromFiles = results.flag('from-files');
+      final fromFirebase = results.flag('from-firebase');
+      final interactive = results.flag('interactive');
+      final projectIds = results['project-ids'] as String?;
+
+      logInfo('Setting Firebase project IDs...');
+      await setProjectIds(
+        configPath: configPath,
+        fromFiles: fromFiles,
+        fromFirebase: fromFirebase,
+        interactive: interactive,
+        projectIds: projectIds,
+      );
+      return;
+    }
+
     logError('Unknown command: $command');
-    logInfo('Available commands: init, configure, list');
+    logInfo('Available commands: init, configure, list, set-project-ids');
     logInfo('Use --help for more information.');
     printUsage(argParser);
   } on FormatException catch (e) {
