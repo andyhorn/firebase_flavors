@@ -2,6 +2,7 @@ name: firebase_flavors
 description: A Dart CLI tool for configuring Firebase for multiple Flutter flavors.
 version: 1.0.0+3
 repository: https://github.com/andyhorn/firebase_flavors
+license: MIT
 
 environment:
   sdk: ^3.10.1
