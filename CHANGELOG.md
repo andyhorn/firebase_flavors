@@ -1,3 +1,7 @@
+## 2.0.1
+
+Run `dart format` to fix formatting errors for CI workflow.
+
 ## 2.0.0
 
 ### Breaking Changes
