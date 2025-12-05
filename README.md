@@ -23,7 +23,6 @@ You can then run it from anywhere with:
 
 ```bash
 dart run firebase_flavors [command]
-
 ```
 
 Make sure your `PATH` includes the pub cache bin directory:
