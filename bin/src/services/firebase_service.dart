@@ -55,7 +55,9 @@ class FirebaseService {
       );
     }
     if (ios) {
-      logDebug('iOS bundle ID: ${flavorConfig.getIosBundleId(config.baseBundleId)}');
+      logDebug(
+        'iOS bundle ID: ${flavorConfig.getIosBundleId(config.baseBundleId)}',
+      );
     }
     logDebug('Dart options out: ${flavorConfig.dartOptionsOut}');
 

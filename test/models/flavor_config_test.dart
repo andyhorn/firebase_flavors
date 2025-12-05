@@ -252,7 +252,10 @@ firebaseProjectId: test-project
         platforms: null,
       );
 
-      expect(config.getAndroidBundleId('com.example.app'), equals('com.example.app.dev'));
+      expect(
+        config.getAndroidBundleId('com.example.app'),
+        equals('com.example.app.dev'),
+      );
     });
 
     test('getAndroidBundleId returns base bundle ID when suffix is null', () {
@@ -266,7 +269,10 @@ firebaseProjectId: test-project
         platforms: null,
       );
 
-      expect(config.getAndroidBundleId('com.example.app'), equals('com.example.app'));
+      expect(
+        config.getAndroidBundleId('com.example.app'),
+        equals('com.example.app'),
+      );
     });
 
     test('getIosBundleId appends suffix to base bundle ID', () {
@@ -281,7 +287,10 @@ firebaseProjectId: test-project
         iosBundleSuffix: '.dev',
       );
 
-      expect(config.getIosBundleId('com.example.app'), equals('com.example.app.dev'));
+      expect(
+        config.getIosBundleId('com.example.app'),
+        equals('com.example.app.dev'),
+      );
     });
 
     test('getIosBundleId returns base bundle ID when suffix is null', () {
@@ -296,7 +305,10 @@ firebaseProjectId: test-project
         iosBundleSuffix: null,
       );
 
-      expect(config.getIosBundleId('com.example.app'), equals('com.example.app'));
+      expect(
+        config.getIosBundleId('com.example.app'),
+        equals('com.example.app'),
+      );
     });
   });
 }

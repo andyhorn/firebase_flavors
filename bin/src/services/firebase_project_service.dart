@@ -8,10 +8,7 @@ import '../utils/process_runner.dart';
 
 /// Represents a Firebase project.
 class FirebaseProject {
-  const FirebaseProject({
-    required this.projectId,
-    required this.displayName,
-  });
+  const FirebaseProject({required this.projectId, required this.displayName});
 
   final String projectId;
   final String displayName;
@@ -25,11 +22,9 @@ class FirebaseProjectService {
   final ProcessRunner _processRunner;
   final FileSystem _fileSystem;
 
-  FirebaseProjectService({
-    ProcessRunner? processRunner,
-    FileSystem? fileSystem,
-  })  : _processRunner = processRunner ?? DefaultProcessRunner(),
-        _fileSystem = fileSystem ?? DefaultFileSystem();
+  FirebaseProjectService({ProcessRunner? processRunner, FileSystem? fileSystem})
+    : _processRunner = processRunner ?? DefaultProcessRunner(),
+      _fileSystem = fileSystem ?? DefaultFileSystem();
 
   /// Extracts project ID from a google-services.json file.
   ///
@@ -91,10 +86,10 @@ class FirebaseProjectService {
   Future<List<FirebaseProject>> listProjects() async {
     try {
       logDebug('Querying Firebase CLI for available projects...');
-      final result = await _processRunner.run(
-        'firebase',
-        ['projects:list', '--json'],
-      );
+      final result = await _processRunner.run('firebase', [
+        'projects:list',
+        '--json',
+      ]);
 
       if (result.exitCode != 0) {
         logDebug('Firebase CLI returned exit code: ${result.exitCode}');
@@ -163,7 +158,9 @@ class FirebaseProjectService {
       final androidProjectId = extractFromGoogleServices(androidPath);
       if (androidProjectId != null) {
         detected[flavorName] = androidProjectId;
-        logDebug('Detected project ID for $flavorName from Android: $androidProjectId');
+        logDebug(
+          'Detected project ID for $flavorName from Android: $androidProjectId',
+        );
         continue;
       }
 
@@ -180,4 +177,3 @@ class FirebaseProjectService {
     return detected;
   }
 }
-

@@ -82,7 +82,6 @@ void main() {
       expect(content, contains('configBase: ios/Runner/Config'));
     });
 
-
     test('includes all required flavor fields', () {
       final content = YamlGenerator.generateContent(
         baseBundleId: 'com.example.app',

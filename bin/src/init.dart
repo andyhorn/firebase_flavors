@@ -298,7 +298,6 @@ String? _extractBundleIdFromPbxproj(File pbxprojFile) {
   return firstMatch?.group(1);
 }
 
-
 /// Extracts target name from project.pbxproj file.
 String? _extractTargetFromPbxproj(File pbxprojFile) {
   final content = pbxprojFile.readAsStringSync();

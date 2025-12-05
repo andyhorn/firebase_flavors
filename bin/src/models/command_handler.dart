@@ -70,10 +70,7 @@ class CommandHandler {
 
   Future<void> _handleInit(ArgResults commandResults, String configPath) async {
     logInfo('Initializing firebase_flavors configuration...');
-    await init(
-      force: commandResults['force'] as bool,
-      configPath: configPath,
-    );
+    await init(force: commandResults['force'] as bool, configPath: configPath);
   }
 
   Future<void> _handleList(String configPath) async {
@@ -101,9 +98,7 @@ class CommandHandler {
     final flavors = <String>[];
 
     if (commandResults.rest.isNotEmpty) {
-      flavors.addAll(
-        commandResults.rest.first.split(',').map((e) => e.trim()),
-      );
+      flavors.addAll(commandResults.rest.first.split(',').map((e) => e.trim()));
     }
 
     logInfo('Configuring Firebase flavors...');
@@ -139,4 +134,3 @@ class CommandHandler {
     print(argParser.usage);
   }
 }
-

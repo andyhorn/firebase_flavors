@@ -6,7 +6,7 @@ class YamlUpdater {
   final FileSystem _fileSystem;
 
   YamlUpdater({FileSystem? fileSystem})
-      : _fileSystem = fileSystem ?? DefaultFileSystem();
+    : _fileSystem = fileSystem ?? DefaultFileSystem();
 
   /// Updates the firebaseProjectId for a specific flavor in the YAML file.
   ///
@@ -37,7 +37,9 @@ class YamlUpdater {
         }
 
         // Check if we're entering a specific flavor section
-        if (inFlavorSection && !line.startsWith(' ') && !line.startsWith('\t')) {
+        if (inFlavorSection &&
+            !line.startsWith(' ') &&
+            !line.startsWith('\t')) {
           // We've left the flavors section or entered a new top-level key
           if (trimmed.isNotEmpty && !trimmed.startsWith('#')) {
             inFlavorSection = false;
@@ -56,7 +58,10 @@ class YamlUpdater {
           // Check if this is the firebaseProjectId line
           if (trimmed.startsWith('firebaseProjectId:')) {
             // Update the project ID, preserving indentation
-            final indent = line.substring(0, line.length - line.trimLeft().length);
+            final indent = line.substring(
+              0,
+              line.length - line.trimLeft().length,
+            );
             updatedLines.add('${indent}firebaseProjectId: $projectId');
             updated = true;
             continue;
@@ -71,7 +76,8 @@ class YamlUpdater {
             if (!updated) {
               // Find the indentation level of the flavor
               final flavorIndent = _getIndent(lines[i - 1]);
-              final indent = '$flavorIndent  '; // Add 2 spaces for nested property
+              final indent =
+                  '$flavorIndent  '; // Add 2 spaces for nested property
               // Insert before the current line
               updatedLines.insert(
                 updatedLines.length - 1,
@@ -80,7 +86,8 @@ class YamlUpdater {
               updated = true;
             }
             foundFlavor = false;
-            inFlavorSection = trimmed == 'flavors:' || trimmed.startsWith('flavors:');
+            inFlavorSection =
+                trimmed == 'flavors:' || trimmed.startsWith('flavors:');
           }
         }
 
@@ -97,12 +104,16 @@ class YamlUpdater {
             String indent = '    ';
             for (int j = i + 1; j < updatedLines.length; j++) {
               final nextLine = updatedLines[j];
-              if (nextLine.trim().isNotEmpty && !nextLine.trim().startsWith('#')) {
+              if (nextLine.trim().isNotEmpty &&
+                  !nextLine.trim().startsWith('#')) {
                 indent = _getIndent(nextLine);
                 break;
               }
             }
-            updatedLines.insert(i + 1, '${indent}firebaseProjectId: $projectId');
+            updatedLines.insert(
+              i + 1,
+              '${indent}firebaseProjectId: $projectId',
+            );
             updated = true;
             break;
           }
@@ -112,7 +123,9 @@ class YamlUpdater {
       if (updated) {
         final updatedContent = updatedLines.join('\n');
         _fileSystem.writeFile(configPath, updatedContent);
-        logDebug('Updated firebaseProjectId for flavor "$flavorName" to "$projectId"');
+        logDebug(
+          'Updated firebaseProjectId for flavor "$flavorName" to "$projectId"',
+        );
         return true;
       } else {
         logWarning('Could not find flavor "$flavorName" in configuration file');
@@ -147,4 +160,3 @@ class YamlUpdater {
     return successCount;
   }
 }
-

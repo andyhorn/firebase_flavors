@@ -48,7 +48,9 @@ Future<void> listFlavors({required String configPath}) async {
 
     // Android details
     if (platformNames.isEmpty || platformNames.contains('android')) {
-      final androidPackage = flavorConfig.getAndroidBundleId(config.baseBundleId);
+      final androidPackage = flavorConfig.getAndroidBundleId(
+        config.baseBundleId,
+      );
       final androidPath =
           '${config.androidSrcBase}/${flavorConfig.androidSrcDir}/google-services.json';
       print('    Android:');

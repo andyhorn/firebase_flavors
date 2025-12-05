@@ -33,7 +33,9 @@ Future<void> setProjectIds({
     final detected = projectService.detectFromConfigFiles(config);
     if (detected.isEmpty) {
       logWarning('No project IDs detected from config files');
-      logInfo('Make sure google-services.json or GoogleService-Info.plist files exist');
+      logInfo(
+        'Make sure google-services.json or GoogleService-Info.plist files exist',
+      );
     } else {
       logInfo('Detected ${detected.length} project ID(s)');
       for (final entry in detected.entries) {
@@ -65,7 +67,9 @@ Future<void> setProjectIds({
       }
 
       stdout.writeln('');
-      stdout.write('Select Firebase project for flavor "$flavorName" (1-${projects.length}): ');
+      stdout.write(
+        'Select Firebase project for flavor "$flavorName" (1-${projects.length}): ',
+      );
       final input = stdin.readLineSync()?.trim();
       if (input == null || input.isEmpty) {
         logWarning('Skipping $flavorName (no selection)');
@@ -90,7 +94,9 @@ Future<void> setProjectIds({
     for (final pair in pairs) {
       final parts = pair.split(':');
       if (parts.length != 2) {
-        logWarning('Invalid project ID format: $pair (expected flavor:project-id)');
+        logWarning(
+          'Invalid project ID format: $pair (expected flavor:project-id)',
+        );
         continue;
       }
       final flavorName = parts[0].trim();
@@ -159,4 +165,3 @@ Future<void> setProjectIds({
     logWarning('Updated $successCount of ${updates.length} project ID(s)');
   }
 }
-
