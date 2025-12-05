@@ -1,3 +1,15 @@
+## 2.0.0
+
+### Breaking Changes
+
+#### Remove `iosBundleId` in favor of `iosBundleSuffix`
+
+The behavior was changed to match the behavior of `androidPackageSuffix`.
+
+Instead of supplying the full bundle ID, just supply the suffix. e.g.
+
+`iosBundleId: com.example.app.dev` becomes `iosBundleSuffix: .dev`
+
 ## 1.1.0
 
 ### Added
