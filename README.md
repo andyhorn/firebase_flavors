@@ -1,19 +1,20 @@
 # Firebase Flavors
 
-A Dart CLI tool for configuring Firebase within your project for multiple Flutter flavors.
+A Dart CLI tool for configuring Firebase for multiple Flutter flavors.
 
 ## Features
 
-- 🚀 **Automatic Configuration Detection**: Automatically detects flavors, bundle IDs, and app names from your Android Gradle files or iOS project files
-- 📱 **Multi-Platform Support**: Configure Firebase for both Android and iOS platforms
-- 🎯 **Flavor Management**: Easily manage multiple Firebase projects for different app flavors
-- ⚙️ **Flexible Configuration**: Customize package names, bundle IDs, and output paths per flavor
-- 🔧 **Xcode Integration**: Automatically sets up Xcode run scripts for iOS Google Services configuration
-- 📝 **YAML Configuration**: Simple, human-readable YAML configuration file
+* Configures Firebase within your Flutter app for multiple flavors
+  * Registers apps in Firebase project
+  * Downloads Google config to flavor-based directories in Android and/or iOS dir
+  * Generates per-flavor `firebase_options` file
+  * Adds script to Xcode project to copy the correct `GoogleServices-Info.plist` file into build dir
+* Initialize with your current settings from Android and/or iOS project files
+* Customize package names, bundle IDs, output paths, and more
 
 ## Installation
 
-### Using pub (Recommended)
+### Global (Recommended)
 
 ```bash
 dart pub global activate firebase_flavors
@@ -29,7 +30,7 @@ Make sure your `PATH` includes the pub cache bin directory:
 - **macOS/Linux**: `~/.pub-cache/bin`
 - **Windows**: `%APPDATA%\Pub\Cache\bin`
 
-### Development Install (in your project)
+### Local Development Dependency
 
 Add this to your project's `pubspec.yaml` under `dev_dependencies`:
 
@@ -78,7 +79,29 @@ This command will:
 - Detect your base bundle ID and app name
 - Generate a `firebase_flavors.yaml` configuration file
 
-### 2. Edit Configuration
+### 2. Set Firebase Project IDs
+
+You can set Firebase project IDs in two ways:
+
+**Option A: Use the `set-project-ids` command (Recommended)**
+
+This command provides multiple methods to set project IDs:
+
+```bash
+# Auto-detect from existing config files
+firebase_flavors set-project-ids --from-files
+
+# Interactive selection from Firebase CLI projects list
+firebase_flavors set-project-ids --from-firebase
+
+# Interactive prompts
+firebase_flavors set-project-ids --interactive
+
+# Or specify directly via command line
+firebase_flavors set-project-ids --project-ids dev:your-dev-project-id,prod:your-prod-project-id
+```
+
+**Option B: Edit Configuration Manually**
 
 Open `firebase_flavors.yaml` and update the Firebase project IDs for each flavor:
 
@@ -103,7 +126,7 @@ Run the configure command to set up Firebase for your flavors:
 firebase_flavors configure
 ```
 
-This will configure all flavors, or specify specific ones:
+This will configure all flavors, or you can specify flavors using a list:
 
 ```bash
 firebase_flavors configure dev,staging
@@ -172,6 +195,30 @@ firebase_flavors list [--config <path>]
   - Android package name and config file path
   - iOS bundle ID and config file path
   - Dart options output path
+
+### `set-project-ids`
+
+Sets Firebase project IDs for flavors in the configuration file.
+
+```bash
+firebase_flavors set-project-ids [--from-files] [--from-firebase] [--interactive] [--project-ids <pairs>] [--config <path>]
+```
+
+**Options:**
+- `--from-files`: Auto-detect project IDs from existing `google-services.json` or `GoogleService-Info.plist` files
+- `--from-firebase`: Interactive selection from Firebase CLI projects list (requires Firebase CLI login)
+- `--interactive`: Prompt for project IDs interactively
+- `--project-ids <pairs>`: Comma-separated list of `flavor:project-id` pairs (e.g., `dev:project-id-1,prod:project-id-2`)
+- `--config <path>`: Specify custom config file path (default: `firebase_flavors.yaml`)
+
+**What it does:**
+- Updates the `firebaseProjectId` field for each flavor in `firebase_flavors.yaml`
+- Supports multiple methods for setting project IDs:
+  - Auto-detection from existing config files
+  - Interactive selection from Firebase projects
+  - Interactive prompts
+  - Direct specification via command line
+- If no method is specified, defaults to interactive mode
 
 ### Global Options
 
@@ -253,7 +300,8 @@ flavors:
 # 1. Initialize
 firebase_flavors init
 
-# 2. Edit firebase_flavors.yaml with your Firebase project IDs
+# 2. Set Firebase project IDs (or edit firebase_flavors.yaml manually)
+firebase_flavors set-project-ids --from-firebase
 
 # 3. Configure all flavors
 firebase_flavors configure
@@ -286,6 +334,27 @@ firebase_flavors configure --config custom_config.yaml
 ```bash
 # Get detailed debug information
 firebase_flavors configure --verbose
+```
+
+### Example 6: Set Project IDs from Files
+
+```bash
+# Auto-detect project IDs from existing config files
+firebase_flavors set-project-ids --from-files
+```
+
+### Example 7: Set Project IDs from Firebase CLI
+
+```bash
+# Select projects interactively from Firebase CLI
+firebase_flavors set-project-ids --from-firebase
+```
+
+### Example 8: Set Project IDs via Command Line
+
+```bash
+# Set project IDs directly
+firebase_flavors set-project-ids --project-ids dev:my-dev-project,staging:my-staging-project,prod:my-prod-project
 ```
 
 ## Project Structure
