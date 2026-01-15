@@ -1,3 +1,7 @@
+## 2.0.2
+
+Fix iOS bundle IDs by replacing underscores with hyphens for Firebase compatibility.
+
 ## 2.0.1
 
 Run `dart format` to fix formatting errors for CI workflow.
