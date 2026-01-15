@@ -310,5 +310,23 @@ firebaseProjectId: test-project
         equals('com.example.app'),
       );
     });
+
+    test('getIosBundleId replaces underscores with hyphens', () {
+      final config = FlavorConfig(
+        name: 'dev',
+        firebaseProjectId: 'test-project',
+        androidPackageSuffix: null,
+        dartOptionsOut: 'lib/firebase_options_dev.dart',
+        androidSrcDir: 'dev',
+        iosConfigDir: 'dev',
+        platforms: null,
+        iosBundleSuffix: '.qa',
+      );
+
+      expect(
+        config.getIosBundleId('com.example_my_app'),
+        equals('com.example-my-app.qa'),
+      );
+    });
   });
 }

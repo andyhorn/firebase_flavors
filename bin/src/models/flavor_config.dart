@@ -58,7 +58,9 @@ class FlavorConfig {
 
   /// Returns the iOS bundle ID by appending the suffix to the base bundle ID.
   String getIosBundleId(String baseBundleId) {
-    return baseBundleId + (iosBundleSuffix ?? '');
+    final bundleId = baseBundleId + (iosBundleSuffix ?? '');
+    // Firebase rejects iOS bundle IDs with underscores; normalize to hyphens.
+    return bundleId.replaceAll('_', '-');
   }
 
   final String name;
