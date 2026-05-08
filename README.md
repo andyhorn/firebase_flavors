@@ -517,6 +517,18 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
+### Bumping the version
+
+`bin/src/version.dart` is generated from `pubspec.yaml`. After changing
+the `version:` field, regenerate the constant:
+
+```bash
+dart run tool/sync_version.dart
+```
+
+CI runs `dart run tool/sync_version.dart --check` and will fail the
+build if the two are out of sync.
+
 ## License
 
 This project is open source. Please check the repository for license information.
