@@ -27,6 +27,22 @@ Future<void> setProjectIds({
   final yamlUpdater = YamlUpdater();
   final updates = <String, String>{};
 
+  // If no method was specified, default to interactive prompts.
+  if (!fromFiles &&
+      !fromFirebase &&
+      (projectIds == null || projectIds.isEmpty) &&
+      !interactive) {
+    logInfo('No method specified, using interactive mode...');
+    interactive = true;
+  }
+
+  String displayCurrent(String flavor) {
+    final current =
+        updates[flavor] ?? config.flavors[flavor]!.firebaseProjectId;
+    if (current.startsWith('your-firebase-project-id-for-')) return 'unset';
+    return current;
+  }
+
   // Method 1: Auto-detect from existing config files
   if (fromFiles) {
     logInfo('Detecting project IDs from existing config files...');
@@ -68,11 +84,13 @@ Future<void> setProjectIds({
 
       stdout.writeln('');
       stdout.write(
-        'Select Firebase project for flavor "$flavorName" (1-${projects.length}): ',
+        'Select Firebase project for "$flavorName" '
+        '[current: ${displayCurrent(flavorName)}] '
+        '(1-${projects.length}, Enter to keep): ',
       );
       final input = stdin.readLineSync()?.trim();
       if (input == null || input.isEmpty) {
-        logWarning('Skipping $flavorName (no selection)');
+        logDebug('Keeping existing value for $flavorName');
         continue;
       }
 
@@ -123,30 +141,17 @@ Future<void> setProjectIds({
       }
 
       stdout.writeln('');
-      stdout.write('Enter Firebase project ID for flavor "$flavorName": ');
+      stdout.write(
+        'Firebase project ID for "$flavorName" '
+        '[current: ${displayCurrent(flavorName)}] (Enter to keep): ',
+      );
       final input = stdin.readLineSync()?.trim();
-      if (input != null && input.isNotEmpty) {
-        updates[flavorName] = input;
-        logInfo('Set project ID for $flavorName: $input');
-      } else {
-        logWarning('Skipping $flavorName (empty input)');
+      if (input == null || input.isEmpty) {
+        logDebug('Keeping existing value for $flavorName');
+        continue;
       }
-    }
-  }
-
-  // If no method was specified, default to interactive
-  if (!fromFiles && !fromFirebase && projectIds == null && !interactive) {
-    logInfo('No method specified, using interactive mode...');
-    for (final flavorName in flavors) {
-      stdout.writeln('');
-      stdout.write('Enter Firebase project ID for flavor "$flavorName": ');
-      final input = stdin.readLineSync()?.trim();
-      if (input != null && input.isNotEmpty) {
-        updates[flavorName] = input;
-        logInfo('Set project ID for $flavorName: $input');
-      } else {
-        logWarning('Skipping $flavorName (empty input)');
-      }
+      updates[flavorName] = input;
+      logInfo('Set project ID for $flavorName: $input');
     }
   }
 
