@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:xcode_parser/xcode_parser.dart';
 
+import 'exceptions.dart';
 import 'logger.dart';
 import 'utils/gradle_parser.dart';
 import 'utils/yaml_generator.dart';
@@ -27,11 +28,10 @@ Future<void> init({bool force = false, required String configPath}) async {
   final yamlFile = File(configPath);
 
   if (yamlFile.existsSync() && !force) {
-    logError(
+    throw FirebaseFlavorsException(
       'firebase_flavors.yaml already exists.\n'
       'Use `firebase_flavors init --force` to overwrite.',
     );
-    exit(1);
   }
 
   if (force && yamlFile.existsSync()) {

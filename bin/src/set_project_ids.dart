@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'exceptions.dart';
 import 'logger.dart';
 import 'services/firebase_project_service.dart';
 import 'utils/config_reader.dart';
@@ -19,8 +20,7 @@ Future<void> setProjectIds({
 
   final flavors = config.flavors.keys.toList();
   if (flavors.isEmpty) {
-    logError('No flavors found in configuration file');
-    exit(1);
+    throw FirebaseFlavorsException('No flavors found in configuration file');
   }
 
   final projectService = FirebaseProjectService();
@@ -66,9 +66,10 @@ Future<void> setProjectIds({
     logInfo('Fetching available Firebase projects...');
     final projects = await projectService.listProjects();
     if (projects.isEmpty) {
-      logError('No Firebase projects found or Firebase CLI is not available');
       logInfo('Make sure you are logged in: firebase login');
-      exit(1);
+      throw FirebaseFlavorsException(
+        'No Firebase projects found or Firebase CLI is not available',
+      );
     }
 
     logInfo('Available Firebase projects:');
