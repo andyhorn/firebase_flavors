@@ -1,10 +1,9 @@
 import 'dart:io';
 
-import 'package:xcode_parser/xcode_parser.dart';
-
 import 'exceptions.dart';
 import 'logger.dart';
 import 'utils/gradle_parser.dart';
+import 'utils/ios_project_parser.dart';
 import 'utils/yaml_generator.dart';
 
 /// Holds all detected values from Android or iOS project files.
@@ -215,7 +214,9 @@ _DetectionResult? _detectFromIOSProject() {
   if (pbxprojFile != null && pbxprojFile.existsSync()) {
     logDebug('Found project.pbxproj: ${pbxprojFile.path}');
     try {
-      final extracted = _extractFromPbxproj(pbxprojFile);
+      final extracted = IosProjectParser.extractFromPbxproj(
+        pbxprojFile.readAsStringSync(),
+      );
       baseBundleId = extracted.bundleId;
       iosTarget = extracted.targetName;
       if (baseBundleId != null) {
@@ -236,7 +237,9 @@ _DetectionResult? _detectFromIOSProject() {
   if (infoPlistFile.existsSync()) {
     logDebug('Found Info.plist: ${infoPlistFile.path}');
     try {
-      appName = _extractAppNameFromInfoPlist(infoPlistFile);
+      appName = IosProjectParser.extractAppNameFromInfoPlist(
+        infoPlistFile.readAsStringSync(),
+      );
       if (appName != null) {
         logDebug('Extracted app name from Info.plist: $appName');
       }
@@ -253,120 +256,6 @@ _DetectionResult? _detectFromIOSProject() {
       appName: appName,
       iosTarget: iosTarget ?? 'Runner',
     );
-  }
-
-  return null;
-}
-
-/// Extracts the main app target's name and bundle ID from a pbxproj file.
-///
-/// Walks the project graph: PBXNativeTarget where productType is the iOS
-/// app type → its XCConfigurationList → first XCBuildConfiguration's
-/// PRODUCT_BUNDLE_IDENTIFIER. This avoids picking up bundle IDs from
-/// test, UI test, or extension targets.
-({String? targetName, String? bundleId}) _extractFromPbxproj(File pbxprojFile) {
-  final content = pbxprojFile.readAsStringSync();
-  final project = Pbxproj.parse(content);
-  final objects = project.find<MapPbx>('objects');
-  if (objects == null) return (targetName: null, bundleId: null);
-
-  SectionPbx? section(String name) {
-    for (final c in objects.childrenList) {
-      if (c is SectionPbx && c.uuid == name) return c;
-    }
-    return null;
-  }
-
-  final nativeTargets = section('PBXNativeTarget');
-  if (nativeTargets == null) return (targetName: null, bundleId: null);
-
-  MapPbx? appTarget;
-  for (final t in nativeTargets.childrenList) {
-    if (t is! MapPbx) continue;
-    final pt = t.find<MapEntryPbx>('productType')?.value.toString() ?? '';
-    if (pt.contains('com.apple.product-type.application')) {
-      appTarget = t;
-      break;
-    }
-  }
-  if (appTarget == null) return (targetName: null, bundleId: null);
-
-  final targetName = _unquote(
-    appTarget.find<MapEntryPbx>('name')?.value.toString(),
-  );
-
-  final cfgListUuid = appTarget
-      .find<MapEntryPbx>('buildConfigurationList')
-      ?.value
-      .toString();
-  final cfgLists = section('XCConfigurationList');
-  MapPbx? cfgList;
-  for (final c in cfgLists?.childrenList ?? const []) {
-    if (c is MapPbx && c.uuid == cfgListUuid) {
-      cfgList = c;
-      break;
-    }
-  }
-  final buildCfgs = cfgList?.find<ListPbx>('buildConfigurations');
-  if (buildCfgs == null || buildCfgs.isEmpty) {
-    return (targetName: targetName, bundleId: null);
-  }
-
-  final buildConfigsSection = section('XCBuildConfiguration');
-  String? bundleId;
-  for (final el in buildCfgs.toList()) {
-    final uuid = el.value.toString();
-    MapPbx? cfg;
-    for (final c in buildConfigsSection?.childrenList ?? const []) {
-      if (c is MapPbx && c.uuid == uuid) {
-        cfg = c;
-        break;
-      }
-    }
-    final raw = cfg
-        ?.find<MapPbx>('buildSettings')
-        ?.find<MapEntryPbx>('PRODUCT_BUNDLE_IDENTIFIER')
-        ?.value
-        .toString();
-    final candidate = _unquote(raw);
-    if (candidate != null && !candidate.contains(r'$(')) {
-      bundleId = candidate;
-      break;
-    }
-  }
-
-  return (targetName: targetName, bundleId: bundleId);
-}
-
-/// Strips surrounding double quotes from a pbxproj scalar, if present.
-String? _unquote(String? value) {
-  if (value == null) return null;
-  if (value.length >= 2 && value.startsWith('"') && value.endsWith('"')) {
-    return value.substring(1, value.length - 1);
-  }
-  return value;
-}
-
-/// Extracts app name from Info.plist file.
-String? _extractAppNameFromInfoPlist(File infoPlistFile) {
-  final content = infoPlistFile.readAsStringSync();
-
-  // Try CFBundleDisplayName first (user-facing name)
-  final displayNamePattern =
-      r'<key>\s*CFBundleDisplayName\s*</key>\s*<string>([^<]+)</string>';
-  final displayNameRegex = RegExp(displayNamePattern, caseSensitive: false);
-  final displayNameMatch = displayNameRegex.firstMatch(content);
-  if (displayNameMatch != null) {
-    return displayNameMatch.group(1)?.trim();
-  }
-
-  // Fallback to CFBundleName
-  final bundleNamePattern =
-      r'<key>\s*CFBundleName\s*</key>\s*<string>([^<]+)</string>';
-  final bundleNameRegex = RegExp(bundleNamePattern, caseSensitive: false);
-  final bundleNameMatch = bundleNameRegex.firstMatch(content);
-  if (bundleNameMatch != null) {
-    return bundleNameMatch.group(1)?.trim();
   }
 
   return null;
