@@ -23,7 +23,12 @@ class CommandHandler {
 
     // Handle global flags that don't require a command
     if (results.flag('help')) {
-      _printUsage(_commandParser.parser);
+      final command = results.command;
+      if (command != null) {
+        _printCommandUsage(command.name!);
+      } else {
+        _printUsage(_commandParser.parser);
+      }
       return;
     }
 
@@ -132,5 +137,16 @@ class CommandHandler {
   void _printUsage(ArgParser argParser) {
     print('Usage: dart firebase_flavors.dart <flags> [arguments]');
     print(argParser.usage);
+  }
+
+  void _printCommandUsage(String commandName) {
+    final subParser = _commandParser.parser.commands[commandName];
+    print('Usage: firebase_flavors $commandName [arguments]');
+    if (subParser != null && subParser.usage.isNotEmpty) {
+      print(subParser.usage);
+    }
+    print('');
+    print('Global flags:');
+    print(_commandParser.parser.usage);
   }
 }
