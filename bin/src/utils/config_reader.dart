@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:yaml/yaml.dart';
 
+import '../exceptions.dart';
 import '../logger.dart';
 import '../models/global_config.dart';
 
@@ -18,13 +19,14 @@ class ConfigReader {
 
     if (!file.existsSync()) {
       final absolutePath = file.absolute.path;
-      logError('Configuration file $configPath not found.');
       logInfo('Expected location: $absolutePath');
       logInfo('Run "firebase_flavors init" to create a configuration file.');
       logInfo(
         'Or ensure you are running this command from your Flutter project root directory.',
       );
-      exit(1);
+      throw FirebaseFlavorsException(
+        'Configuration file $configPath not found.',
+      );
     }
 
     logDebug('Reading configuration file: ${file.path}');
@@ -54,7 +56,9 @@ class ConfigReader {
           'Common issues: missing quotes, incorrect indentation, or invalid characters.',
         );
       }
-      exit(1);
+      throw FirebaseFlavorsException(
+        'Failed to parse configuration file: ${file.absolute.path}',
+      );
     }
   }
 

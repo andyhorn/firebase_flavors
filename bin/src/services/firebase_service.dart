@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import '../exceptions.dart';
 import '../logger.dart';
 import '../models/flavor_config.dart';
 import '../models/global_config.dart';
@@ -77,15 +78,12 @@ class FirebaseService {
       logInfo(
         'Then ensure your PATH includes: ${Platform.environment['HOME'] ?? Platform.environment['USERPROFILE']}/.pub-cache/bin',
       );
-      exit(1);
+      throw FirebaseFlavorsException('Failed to start flutterfire command.');
     }
 
     final exitCode = await process.exitCode;
 
     if (exitCode != 0) {
-      logError(
-        'flutterfire configure failed for flavor "${flavorConfig.name}"',
-      );
       logError('Exit code: $exitCode');
       logInfo('Common causes:');
       logInfo(
@@ -97,7 +95,10 @@ class FirebaseService {
       logInfo('  - Network connectivity issues');
       logInfo('  - Firebase authentication required (run: firebase login)');
       logInfo('Check the flutterfire output above for more details.');
-      exit(exitCode);
+      throw FirebaseFlavorsException(
+        'flutterfire configure failed for flavor "${flavorConfig.name}"',
+        exitCode: exitCode,
+      );
     }
   }
 }

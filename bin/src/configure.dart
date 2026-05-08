@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'exceptions.dart';
 import 'ios_run_script.dart';
 import 'logger.dart';
@@ -69,10 +67,9 @@ Future<void> configure(
   if (needsFirebase || needsIosScript) {
     final prerequisitesMet = await checkPrerequisites(needsIos: needsIosScript);
     if (!prerequisitesMet) {
-      logError(
+      throw FirebaseFlavorsException(
         'Prerequisites check failed. Please install missing tools and try again.',
       );
-      exit(1);
     }
   }
 
