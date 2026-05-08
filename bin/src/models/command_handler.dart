@@ -1,11 +1,11 @@
 import 'package:args/args.dart';
 
 import '../configure.dart';
-import '../get_pubspec_version.dart';
 import '../init.dart';
 import '../list.dart';
 import '../logger.dart';
 import '../set_project_ids.dart';
+import '../version.dart';
 import 'arg_parser.dart';
 
 /// Handles command execution based on parsed arguments.
@@ -28,7 +28,7 @@ class CommandHandler {
     }
 
     if (results.flag('version')) {
-      print('firebase_flavors version: ${getPubspecVersion()}');
+      print('firebase_flavors version: $packageVersion');
       return;
     }
 
