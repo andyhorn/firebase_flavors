@@ -14,6 +14,8 @@ class GlobalConfig {
   });
 
   factory GlobalConfig.fromYaml(YamlMap map) {
+    final ios = map['ios'] as YamlMap?;
+    final iosTarget = ios?['target'] as String? ?? 'Runner';
     return GlobalConfig(
       appName: map['appName'] as String,
       baseBundleId: map['baseBundleId'] as String,
@@ -21,12 +23,9 @@ class GlobalConfig {
           (map['android'] as YamlMap?)?['srcBase'] as String? ??
           'android/app/src',
       iosXcodeprojPath:
-          (map['ios'] as YamlMap?)?['xcodeProjPath'] as String? ??
-          'ios/Runner.xcodeproj',
-      iosTarget: (map['ios'] as YamlMap?)?['target'] as String? ?? 'Runner',
-      iosConfigBase:
-          (map['ios'] as YamlMap?)?['configBase'] as String? ??
-          'ios/Runner/Runner',
+          ios?['xcodeprojPath'] as String? ?? 'ios/$iosTarget.xcodeproj',
+      iosTarget: iosTarget,
+      iosConfigBase: ios?['configBase'] as String? ?? 'ios/$iosTarget',
       flavors:
           (map['flavors'] as YamlMap?)?.map(
             (key, value) => MapEntry(

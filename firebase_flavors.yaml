@@ -10,11 +10,11 @@ android:
 ios:
   xcodeprojPath: ios/Runner.xcodeproj
   target: Runner
-  configBase: ios/Runner/Config
+  configBase: ios/Runner
 
 flavors:
   dev:
-    firebaseProjectId: your-firebase-project-id-for-dev
+    firebaseProjectId: # Run: firebase_flavors set-project-ids
     androidPackageSuffix: dev
     dartOptionsOut: lib/firebase_options_dev.dart
     androidSrcDir: dev
