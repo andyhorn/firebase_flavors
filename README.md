@@ -246,7 +246,7 @@ android:
 ios:
   xcodeprojPath: ios/Runner.xcodeproj  # Optional, default: ios/Runner.xcodeproj
   target: Runner  # Optional, default: Runner
-  configBase: ios/Runner/Runner  # Optional, default: ios/Runner/Runner
+  configBase: ios/Runner  # Optional, default: ios/Runner
 
 # Flavor-specific configuration
 flavors:
@@ -280,7 +280,7 @@ flavors:
 
 - `ios.xcodeprojPath` (optional): Path to your Xcode project file. Default: `ios/Runner.xcodeproj`
 - `ios.target` (optional): Xcode target name. Default: `Runner`
-- `ios.configBase` (optional): Base directory for iOS configuration files. Default: `ios/Runner/Runner`
+- `ios.configBase` (optional): Base directory for iOS configuration files. Default: `ios/Runner`
 
 #### Flavor Configuration
 
@@ -379,13 +379,12 @@ your_flutter_project/
 │               └── google-services.json
 └── ios/
     └── Runner/
-        └── Runner/
-            ├── dev/
-            │   └── GoogleService-Info.plist
-            ├── staging/
-            │   └── GoogleService-Info.plist
-            └── prod/
-                └── GoogleService-Info.plist
+        ├── dev/
+        │   └── GoogleService-Info.plist
+        ├── staging/
+        │   └── GoogleService-Info.plist
+        └── prod/
+            └── GoogleService-Info.plist
 ```
 
 ## Using in Your Flutter App

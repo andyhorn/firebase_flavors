@@ -21,10 +21,11 @@ class YamlGenerator {
     buffer.writeln('android:');
     buffer.writeln('  srcBase: android/app/src');
     buffer.writeln('');
+    final target = iosTarget ?? 'Runner';
     buffer.writeln('ios:');
-    buffer.writeln('  xcodeprojPath: ios/${iosTarget ?? 'Runner'}.xcodeproj');
-    buffer.writeln('  target: ${iosTarget ?? 'Runner'}');
-    buffer.writeln('  configBase: ios/${iosTarget ?? 'Runner'}/Config');
+    buffer.writeln('  xcodeprojPath: ios/$target.xcodeproj');
+    buffer.writeln('  target: $target');
+    buffer.writeln('  configBase: ios/$target');
     buffer.writeln('');
     buffer.writeln('flavors:');
 
