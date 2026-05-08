@@ -47,7 +47,7 @@ class YamlGenerator {
 
       buffer.writeln('  $flavor:');
       buffer.writeln(
-        '    firebaseProjectId: your-firebase-project-id-for-$flavor',
+        '    firebaseProjectId: # Run: firebase_flavors set-project-ids',
       );
       buffer.writeln('    androidPackageSuffix: $suffix');
       buffer.writeln('    dartOptionsOut: $optionsOut');

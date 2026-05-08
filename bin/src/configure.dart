@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'exceptions.dart';
 import 'ios_run_script.dart';
 import 'logger.dart';
 import 'prerequisites.dart';
@@ -35,6 +36,22 @@ Future<void> configure(
       continue;
     }
     flavorsToRun.add(flavor);
+  }
+
+  // Validate that all flavors to be configured have a Firebase project ID.
+  // Skipped when --skip-firebase is set (Xcode-only setup doesn't need IDs).
+  if (!skipFirebase) {
+    final unset = flavorsToRun
+        .where((f) => !config.flavors[f]!.hasFirebaseProjectId)
+        .toList();
+    if (unset.isNotEmpty) {
+      logInfo('Run: firebase_flavors set-project-ids');
+      logInfo('Or set firebaseProjectId in $configPath manually.');
+      throw FirebaseFlavorsException(
+        'Cannot configure: ${unset.length} flavor(s) have no '
+        'Firebase project ID set: ${unset.join(', ')}',
+      );
+    }
   }
 
   // Check if any flavors have an iOS platform

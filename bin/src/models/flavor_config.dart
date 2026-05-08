@@ -12,13 +12,16 @@ class FlavorConfig {
     this.iosBundleSuffix,
   });
 
+  /// Whether this flavor has a Firebase project ID set.
+  bool get hasFirebaseProjectId =>
+      firebaseProjectId != null && firebaseProjectId!.isNotEmpty;
+
   factory FlavorConfig.fromYaml(YamlMap map) {
     final name = map['name'] as String;
-    final firebaseProjectId = map['firebaseProjectId'] as String?;
-
-    if (firebaseProjectId?.isEmpty ?? true) {
-      throw ArgumentError('firebaseProjectId is required', 'firebaseProjectId');
-    }
+    final rawProjectId = map['firebaseProjectId'] as String?;
+    final firebaseProjectId = (rawProjectId == null || rawProjectId.isEmpty)
+        ? null
+        : rawProjectId;
 
     final androidPackageSuffix = map['androidPackageSuffix'] as String?;
     final dartOptionsOut =
@@ -30,7 +33,7 @@ class FlavorConfig {
 
     return FlavorConfig(
       name: name,
-      firebaseProjectId: firebaseProjectId!,
+      firebaseProjectId: firebaseProjectId,
       androidPackageSuffix: _normalizeSuffix(androidPackageSuffix),
       dartOptionsOut: dartOptionsOut,
       androidSrcDir: androidSrcDir,
@@ -64,7 +67,7 @@ class FlavorConfig {
   }
 
   final String name;
-  final String firebaseProjectId;
+  final String? firebaseProjectId;
   final String? androidPackageSuffix;
   final String dartOptionsOut;
   final String androidSrcDir;

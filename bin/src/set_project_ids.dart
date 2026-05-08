@@ -39,7 +39,7 @@ Future<void> setProjectIds({
   String displayCurrent(String flavor) {
     final current =
         updates[flavor] ?? config.flavors[flavor]!.firebaseProjectId;
-    if (current.startsWith('your-firebase-project-id-for-')) return 'unset';
+    if (current == null || current.isEmpty) return 'unset';
     return current;
   }
 

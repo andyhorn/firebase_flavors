@@ -23,7 +23,7 @@ flavors:
     # iosBundleSuffix: dev
 
   staging:
-    firebaseProjectId: your-firebase-project-id-for-staging
+    firebaseProjectId: # Run: firebase_flavors set-project-ids
     androidPackageSuffix: staging
     dartOptionsOut: lib/firebase_options_staging.dart
     androidSrcDir: staging
@@ -32,8 +32,8 @@ flavors:
     # iosBundleSuffix: staging
 
   prod:
-    firebaseProjectId: your-firebase-project-id-for-prod
-    androidPackageSuffix: 
+    firebaseProjectId: # Run: firebase_flavors set-project-ids
+    androidPackageSuffix:
     dartOptionsOut: lib/firebase_options_prod.dart
     androidSrcDir: prod
     iosConfigDir: prod
