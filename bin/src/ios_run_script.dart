@@ -151,23 +151,31 @@ flavor_mapping.split(',').each do |pair|
   flavor_map[flavor_name] = ios_config_dir if flavor_name && ios_config_dir
 end
 
-# Generate bash script with flavor mapping
-flavor_map_script = flavor_map.map { |flavor, config_dir|
-  "    [\"#{flavor}\"]=\"#{config_dir}\""
+# Generate POSIX-portable case branches from the flavor mapping.
+# Xcode build phases run under /bin/sh, which doesn't support
+# bash associative arrays.
+case_branches = flavor_map.map { |flavor, config_dir|
+  "    #{flavor}) IOS_CONFIG_DIR=\"#{config_dir}\" ;;"
 }.join("\n")
 
 shell_script = <<~SCRIPT
+  # Skip non-flavor configurations (e.g. plain "Debug" on a test target).
+  case "${CONFIGURATION}" in
+    *-*) ;;
+    *)
+      echo "Skipping GoogleService-Info.plist copy: configuration '${CONFIGURATION}' has no flavor suffix." >&2
+      exit 0
+      ;;
+  esac
+
   FLAVOR_NAME="${CONFIGURATION#*-}"
   CONFIG_BASE="${PROJECT_DIR}/#{config_base}"
-  
-  # Map flavor name to iosConfigDir
-  declare -A FLAVOR_TO_CONFIG_DIR=(
-#{flavor_map_script}
-  )
-  
-  # Get the config directory for this flavor, fallback to flavor name if not found
-  IOS_CONFIG_DIR="${FLAVOR_TO_CONFIG_DIR[$FLAVOR_NAME]:-$FLAVOR_NAME}"
-  
+
+  case "$FLAVOR_NAME" in
+#{case_branches}
+    *) IOS_CONFIG_DIR="$FLAVOR_NAME" ;;
+  esac
+
   PLIST_SOURCE="${CONFIG_BASE}/${IOS_CONFIG_DIR}/GoogleService-Info.plist"
   PLIST_DESTINATION="${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.app/GoogleService-Info.plist"
 
