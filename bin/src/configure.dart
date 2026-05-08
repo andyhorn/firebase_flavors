@@ -25,17 +25,17 @@ Future<void> configure(
     logInfo('Configuring flavors: ${flavors.join(', ')}');
   }
 
-  // Filter invalid flavors and log warnings
-  final flavorsToRun = flavors.where((flavor) {
+  // Filter invalid flavors and log warnings once.
+  final flavorsToRun = <String>[];
+  for (final flavor in flavors) {
     if (config.flavors[flavor] == null) {
       logWarning('Flavor "$flavor" not found in configuration. Skipping.');
       logInfo('Available flavors: ${config.flavors.keys.join(', ')}');
       logInfo('Add this flavor to $configPath or check for typos.');
-      return false;
+      continue;
     }
-
-    return true;
-  });
+    flavorsToRun.add(flavor);
+  }
 
   // Check if any flavors have an iOS platform
   final configuredIos = flavorsToRun.any((flavor) {
