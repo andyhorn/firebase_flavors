@@ -42,8 +42,11 @@ Future<void> listFlavors({required String configPath}) async {
         ? 'all platforms'
         : platformNames.join(', ');
 
+    final projectId = flavorConfig.hasFirebaseProjectId
+        ? flavorConfig.firebaseProjectId
+        : '[unset — run set-project-ids]';
     print('  $flavor:');
-    print('    Firebase Project: ${flavorConfig.firebaseProjectId}');
+    print('    Firebase Project: $projectId');
     print('    Platforms: $platforms');
 
     // Android details
