@@ -385,6 +385,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.2.1"
+  xcode_parser:
+    dependency: "direct main"
+    description:
+      name: xcode_parser
+      sha256: "85ca0a758d3ec34115a7f68d3ea46771c22abdfcce82e5da4e9c2b176d7d5911"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.1.0"
   yaml:
     dependency: "direct main"
     description:
