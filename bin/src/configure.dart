@@ -15,18 +15,20 @@ Future<void> configure(
   final config = ConfigReader.readConfig(configPath);
   logSuccess('Configuration loaded successfully');
 
+  final selectedFlavors = flavors.isEmpty
+      ? config.flavors.keys.toList()
+      : List.of(flavors);
   if (flavors.isEmpty) {
     logInfo(
-      'No flavors specified, configuring all flavors: ${config.flavors.keys.join(', ')}',
+      'No flavors specified, configuring all flavors: ${selectedFlavors.join(', ')}',
     );
-    flavors.addAll(config.flavors.keys);
   } else {
-    logInfo('Configuring flavors: ${flavors.join(', ')}');
+    logInfo('Configuring flavors: ${selectedFlavors.join(', ')}');
   }
 
   // Filter invalid flavors and log warnings once.
   final flavorsToRun = <String>[];
-  for (final flavor in flavors) {
+  for (final flavor in selectedFlavors) {
     if (config.flavors[flavor] == null) {
       logWarning('Flavor "$flavor" not found in configuration. Skipping.');
       logInfo('Available flavors: ${config.flavors.keys.join(', ')}');
