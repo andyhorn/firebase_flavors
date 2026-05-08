@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:xcode_parser/xcode_parser.dart';
+
 import 'logger.dart';
 import 'utils/gradle_parser.dart';
 import 'utils/yaml_generator.dart';
@@ -206,22 +208,6 @@ _DetectionResult? _detectFromIOSProject() {
     }
   }
 
-  // Find Info.plist file
-  File? infoPlistFile;
-  final runnerInfoPlist = File('ios/Runner/Info.plist');
-  if (runnerInfoPlist.existsSync()) {
-    infoPlistFile = runnerInfoPlist;
-  } else {
-    // Try to find Info.plist in any subdirectory
-    final infoPlistFiles = iosDir
-        .listSync(recursive: true)
-        .whereType<File>()
-        .where((file) => file.path.endsWith('Info.plist'));
-    if (infoPlistFiles.isNotEmpty) {
-      infoPlistFile = infoPlistFiles.first;
-    }
-  }
-
   String? baseBundleId;
   String? appName;
   String? iosTarget;
@@ -229,8 +215,9 @@ _DetectionResult? _detectFromIOSProject() {
   if (pbxprojFile != null && pbxprojFile.existsSync()) {
     logDebug('Found project.pbxproj: ${pbxprojFile.path}');
     try {
-      baseBundleId ??= _extractBundleIdFromPbxproj(pbxprojFile);
-      iosTarget = _extractTargetFromPbxproj(pbxprojFile);
+      final extracted = _extractFromPbxproj(pbxprojFile);
+      baseBundleId = extracted.bundleId;
+      iosTarget = extracted.targetName;
       if (baseBundleId != null) {
         logDebug('Extracted bundle ID from project.pbxproj: $baseBundleId');
       }
@@ -239,24 +226,22 @@ _DetectionResult? _detectFromIOSProject() {
       }
     } catch (e) {
       logDebug('Failed to parse project.pbxproj: $e');
-      // Continue to try Info.plist
     }
   }
 
-  if (infoPlistFile != null && infoPlistFile.existsSync()) {
+  // Read app name from the target's Info.plist if present at the canonical
+  // path. Bundle ID is not read from Info.plist — modern Flutter projects
+  // store it as $(PRODUCT_BUNDLE_IDENTIFIER), and pbxproj is authoritative.
+  final infoPlistFile = File('ios/${iosTarget ?? 'Runner'}/Info.plist');
+  if (infoPlistFile.existsSync()) {
     logDebug('Found Info.plist: ${infoPlistFile.path}');
     try {
-      baseBundleId ??= _extractBundleIdFromInfoPlist(infoPlistFile);
-      appName ??= _extractAppNameFromInfoPlist(infoPlistFile);
-      if (baseBundleId != null) {
-        logDebug('Extracted bundle ID from Info.plist: $baseBundleId');
-      }
+      appName = _extractAppNameFromInfoPlist(infoPlistFile);
       if (appName != null) {
         logDebug('Extracted app name from Info.plist: $appName');
       }
     } catch (e) {
       logDebug('Failed to parse Info.plist: $e');
-      // Continue with what we have
     }
   }
 
@@ -273,72 +258,93 @@ _DetectionResult? _detectFromIOSProject() {
   return null;
 }
 
-/// Extracts bundle ID from project.pbxproj file.
-String? _extractBundleIdFromPbxproj(File pbxprojFile) {
+/// Extracts the main app target's name and bundle ID from a pbxproj file.
+///
+/// Walks the project graph: PBXNativeTarget where productType is the iOS
+/// app type → its XCConfigurationList → first XCBuildConfiguration's
+/// PRODUCT_BUNDLE_IDENTIFIER. This avoids picking up bundle IDs from
+/// test, UI test, or extension targets.
+({String? targetName, String? bundleId}) _extractFromPbxproj(File pbxprojFile) {
   final content = pbxprojFile.readAsStringSync();
+  final project = Pbxproj.parse(content);
+  final objects = project.find<MapPbx>('objects');
+  if (objects == null) return (targetName: null, bundleId: null);
 
-  // Look for PRODUCT_BUNDLE_IDENTIFIER in build settings
-  // Format: PRODUCT_BUNDLE_IDENTIFIER = "com.example.app";
-  final bundleIdPattern =
-      'PRODUCT_BUNDLE_IDENTIFIER\\s*[=:]\\s*["\']([^\'"]+)["\']';
-  final bundleIdRegex = RegExp(bundleIdPattern, multiLine: true);
+  SectionPbx? section(String name) {
+    for (final c in objects.childrenList) {
+      if (c is SectionPbx && c.uuid == name) return c;
+    }
+    return null;
+  }
 
-  // Find all matches and prefer the one in the main target (not in specific configs)
-  final matches = bundleIdRegex.allMatches(content);
-  for (final match in matches) {
-    final bundleId = match.group(1)!;
-    // Skip if it contains a variable reference like $(PRODUCT_BUNDLE_IDENTIFIER)
-    if (!bundleId.contains('\$(')) {
-      return bundleId;
+  final nativeTargets = section('PBXNativeTarget');
+  if (nativeTargets == null) return (targetName: null, bundleId: null);
+
+  MapPbx? appTarget;
+  for (final t in nativeTargets.childrenList) {
+    if (t is! MapPbx) continue;
+    final pt = t.find<MapEntryPbx>('productType')?.value.toString() ?? '';
+    if (pt.contains('com.apple.product-type.application')) {
+      appTarget = t;
+      break;
+    }
+  }
+  if (appTarget == null) return (targetName: null, bundleId: null);
+
+  final targetName = _unquote(
+    appTarget.find<MapEntryPbx>('name')?.value.toString(),
+  );
+
+  final cfgListUuid = appTarget
+      .find<MapEntryPbx>('buildConfigurationList')
+      ?.value
+      .toString();
+  final cfgLists = section('XCConfigurationList');
+  MapPbx? cfgList;
+  for (final c in cfgLists?.childrenList ?? const []) {
+    if (c is MapPbx && c.uuid == cfgListUuid) {
+      cfgList = c;
+      break;
+    }
+  }
+  final buildCfgs = cfgList?.find<ListPbx>('buildConfigurations');
+  if (buildCfgs == null || buildCfgs.isEmpty) {
+    return (targetName: targetName, bundleId: null);
+  }
+
+  final buildConfigsSection = section('XCBuildConfiguration');
+  String? bundleId;
+  for (final el in buildCfgs.toList()) {
+    final uuid = el.value.toString();
+    MapPbx? cfg;
+    for (final c in buildConfigsSection?.childrenList ?? const []) {
+      if (c is MapPbx && c.uuid == uuid) {
+        cfg = c;
+        break;
+      }
+    }
+    final raw = cfg
+        ?.find<MapPbx>('buildSettings')
+        ?.find<MapEntryPbx>('PRODUCT_BUNDLE_IDENTIFIER')
+        ?.value
+        .toString();
+    final candidate = _unquote(raw);
+    if (candidate != null && !candidate.contains(r'$(')) {
+      bundleId = candidate;
+      break;
     }
   }
 
-  // If all have variables, return the first one anyway
-  final firstMatch = bundleIdRegex.firstMatch(content);
-  return firstMatch?.group(1);
+  return (targetName: targetName, bundleId: bundleId);
 }
 
-/// Extracts target name from project.pbxproj file.
-String? _extractTargetFromPbxproj(File pbxprojFile) {
-  final content = pbxprojFile.readAsStringSync();
-
-  // Look for PBXNativeTarget with name
-  // Format: /* Runner */ = { ... name = Runner; ... }
-  final targetPattern =
-      r'/\*\s*([A-Za-z0-9_]+)\s*\*/\s*=\s*\{[^}]*name\s*=\s*\1';
-  final targetRegex = RegExp(targetPattern, multiLine: true);
-  final targetMatch = targetRegex.firstMatch(content);
-  if (targetMatch != null) {
-    return targetMatch.group(1);
+/// Strips surrounding double quotes from a pbxproj scalar, if present.
+String? _unquote(String? value) {
+  if (value == null) return null;
+  if (value.length >= 2 && value.startsWith('"') && value.endsWith('"')) {
+    return value.substring(1, value.length - 1);
   }
-
-  // Fallback: look for any PBXNativeTarget
-  final nativeTargetPattern = r'PBXNativeTarget[^}]*name\s*=\s*([A-Za-z0-9_]+)';
-  final nativeTargetRegex = RegExp(nativeTargetPattern, multiLine: true);
-  final nativeTargetMatch = nativeTargetRegex.firstMatch(content);
-  return nativeTargetMatch?.group(1);
-}
-
-/// Extracts bundle ID from Info.plist file.
-String? _extractBundleIdFromInfoPlist(File infoPlistFile) {
-  final content = infoPlistFile.readAsStringSync();
-
-  // XML format: <key>CFBundleIdentifier</key><string>com.example.app</string>
-  final xmlBundleIdPattern =
-      r'<key>\s*CFBundleIdentifier\s*</key>\s*<string>([^<]+)</string>';
-  final xmlBundleIdRegex = RegExp(xmlBundleIdPattern, caseSensitive: false);
-  final xmlMatch = xmlBundleIdRegex.firstMatch(content);
-  if (xmlMatch != null) {
-    return xmlMatch.group(1)?.trim();
-  }
-
-  // Plist format: CFBundleIdentifier = "com.example.app";
-  final plistBundleIdRegex = RegExp(
-    'CFBundleIdentifier\\s*[=:]\\s*["\']([^\'"]+)["\']',
-    caseSensitive: false,
-  );
-  final plistMatch = plistBundleIdRegex.firstMatch(content);
-  return plistMatch?.group(1);
+  return value;
 }
 
 /// Extracts app name from Info.plist file.
