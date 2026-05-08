@@ -21,7 +21,7 @@ flavors: {}
       expect(config.androidSrcBase, equals('android/app/src'));
       expect(config.iosXcodeprojPath, equals('ios/Runner.xcodeproj'));
       expect(config.iosTarget, equals('Runner'));
-      expect(config.iosConfigBase, equals('ios/Runner/Runner'));
+      expect(config.iosConfigBase, equals('ios/Runner'));
       expect(config.flavors, isEmpty);
     });
 
@@ -33,7 +33,7 @@ baseBundleId: com.example.myapp
 android:
   srcBase: android/app/custom/src
 ios:
-  xcodeProjPath: ios/MyApp.xcodeproj
+  xcodeprojPath: ios/MyApp.xcodeproj
   target: MyApp
   configBase: ios/MyApp/Config
 flavors:
@@ -82,7 +82,25 @@ flavors: {}
 
       expect(config.iosXcodeprojPath, equals('ios/Runner.xcodeproj'));
       expect(config.iosTarget, equals('Runner'));
-      expect(config.iosConfigBase, equals('ios/Runner/Runner'));
+      expect(config.iosConfigBase, equals('ios/Runner'));
+    });
+
+    test('derives iOS path defaults from custom target', () {
+      final yaml =
+          loadYaml('''
+appName: Test App
+baseBundleId: com.example.app
+ios:
+  target: MyApp
+flavors: {}
+''')
+              as YamlMap;
+
+      final config = GlobalConfig.fromYaml(yaml);
+
+      expect(config.iosTarget, equals('MyApp'));
+      expect(config.iosXcodeprojPath, equals('ios/MyApp.xcodeproj'));
+      expect(config.iosConfigBase, equals('ios/MyApp'));
     });
 
     test('parses multiple flavors', () {
@@ -155,8 +173,8 @@ flavors: {}
       final config = GlobalConfig.fromYaml(yaml);
 
       expect(config.iosTarget, equals('CustomTarget'));
-      expect(config.iosXcodeprojPath, equals('ios/Runner.xcodeproj'));
-      expect(config.iosConfigBase, equals('ios/Runner/Runner'));
+      expect(config.iosXcodeprojPath, equals('ios/CustomTarget.xcodeproj'));
+      expect(config.iosConfigBase, equals('ios/CustomTarget'));
     });
   });
 }

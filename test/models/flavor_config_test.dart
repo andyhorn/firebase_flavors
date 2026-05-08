@@ -51,26 +51,20 @@ iosBundleSuffix: .stg
       expect(config.iosBundleSuffix, equals('.stg'));
     });
 
-    test('throws ArgumentError when firebaseProjectId is missing', () {
+    test('firebaseProjectId is null when missing', () {
       final yaml =
           loadYaml('''
 name: dev
 ''')
               as YamlMap;
 
-      expect(
-        () => FlavorConfig.fromYaml(yaml),
-        throwsA(
-          isA<ArgumentError>().having(
-            (e) => e.message,
-            'message',
-            contains('firebaseProjectId is required'),
-          ),
-        ),
-      );
+      final config = FlavorConfig.fromYaml(yaml);
+
+      expect(config.firebaseProjectId, isNull);
+      expect(config.hasFirebaseProjectId, isFalse);
     });
 
-    test('throws ArgumentError when firebaseProjectId is empty', () {
+    test('firebaseProjectId is null when empty', () {
       final yaml =
           loadYaml('''
 name: dev
@@ -78,16 +72,23 @@ firebaseProjectId: ''
 ''')
               as YamlMap;
 
-      expect(
-        () => FlavorConfig.fromYaml(yaml),
-        throwsA(
-          isA<ArgumentError>().having(
-            (e) => e.message,
-            'message',
-            contains('firebaseProjectId is required'),
-          ),
-        ),
-      );
+      final config = FlavorConfig.fromYaml(yaml);
+
+      expect(config.firebaseProjectId, isNull);
+      expect(config.hasFirebaseProjectId, isFalse);
+    });
+
+    test('hasFirebaseProjectId is true when set', () {
+      final yaml =
+          loadYaml('''
+name: dev
+firebaseProjectId: real-id
+''')
+              as YamlMap;
+
+      final config = FlavorConfig.fromYaml(yaml);
+
+      expect(config.hasFirebaseProjectId, isTrue);
     });
 
     test('normalizes androidPackageSuffix with leading dot', () {

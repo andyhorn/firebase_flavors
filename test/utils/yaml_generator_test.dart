@@ -66,7 +66,7 @@ void main() {
 
       expect(content, contains('xcodeprojPath: ios/MyApp.xcodeproj'));
       expect(content, contains('target: MyApp'));
-      expect(content, contains('configBase: ios/MyApp/Config'));
+      expect(content, contains('configBase: ios/MyApp'));
     });
 
     test('uses default Runner target when not provided', () {
@@ -79,7 +79,22 @@ void main() {
 
       expect(content, contains('xcodeprojPath: ios/Runner.xcodeproj'));
       expect(content, contains('target: Runner'));
-      expect(content, contains('configBase: ios/Runner/Config'));
+      expect(content, contains('configBase: ios/Runner'));
+    });
+
+    test('emits empty firebaseProjectId with set-project-ids hint', () {
+      final content = YamlGenerator.generateContent(
+        baseBundleId: 'com.example.app',
+        appName: 'Test App',
+        flavors: ['dev'],
+        flavorSuffixes: {},
+      );
+
+      expect(
+        content,
+        contains('firebaseProjectId: # Run: firebase_flavors set-project-ids'),
+      );
+      expect(content, isNot(contains('your-firebase-project-id-for-')));
     });
 
     test('includes all required flavor fields', () {
