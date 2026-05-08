@@ -1,81 +1,50 @@
 # Testing Notes
 
-## Currently Testable
+## Layout
 
-✅ **Models** (`test/models/`):
-- `GlobalConfig.fromYaml()` - YAML parsing
-- `FlavorConfig.fromYaml()` - YAML parsing with normalization
+- `test/models/` — model parsing and helpers (`FlavorConfig`, `GlobalConfig`).
+- `test/utils/` — pure utilities (`GradleParser`, `IosProjectParser`,
+  `YamlGenerator`, `YamlUpdater`, `ConfigReader.normalizePlatforms`,
+  `IosUtils`).
+- `test/services/` — services that take injected `FileSystem` /
+  `ProcessRunner` (`FirebaseProjectService`).
+- `test/fixtures/` — real input files used by parser tests
+  (e.g. `runner.pbxproj`).
+- `test/utils/mocks.dart` — `MockFileSystem` and `MockProcessRunner`
+  used by the service tests.
 
-✅ **Utilities** (`test/utils/`):
-- `ConfigReader.normalizePlatforms()` - Platform name normalization
+## What's Covered
 
-## Not Easily Unit Testable (Requires Refactoring)
+- **Models**: `FlavorConfig.fromYaml` (suffix normalization, optional vs
+  required fields, nullable `firebaseProjectId`), `GlobalConfig.fromYaml`
+  (defaults derived from `iosTarget`, partial iOS config).
+- **Utilities**: `GradleParser` (Groovy + Kotlin DSL flavors,
+  applicationId, namespace fallback), `IosProjectParser`
+  (pbxproj graph traversal, app name extraction), `YamlGenerator`
+  (content shape, suffix inference, target-derived defaults),
+  `YamlUpdater` (yaml_edit-driven, comment preservation),
+  `ConfigReader.normalizePlatforms`, `IosUtils.configBaseRelativeToProjectDir`.
+- **Services**: `FirebaseProjectService` (google-services.json parsing,
+  GoogleService-Info.plist parsing, `detectFromConfigFiles` Android-vs-iOS
+  preference, `listProjects` Firebase CLI JSON parsing).
 
-### Commands (`configure`, `init`, `list`)
-These are hard to unit test because they:
-- Call `exit()` which terminates the process
-- Interact with the file system (need mocking)
-- Call external processes (flutterfire, ruby) - need process mocking
-- Have side effects (file creation, process execution)
+## Intentionally Not Tested
 
-**Recommendation**: Use integration tests or extract testable logic.
+- `init`, `configure`, `list`, `set-project-ids` command bodies
+  themselves: high mocking surface (file system, processes, prerequisites,
+  user input) for thin orchestration around already-tested utilities.
+  Bug surface is in the utilities, which have unit coverage.
+- `ios_run_script.dart`'s embedded Ruby/bash script: the generated
+  shell is exercised at Xcode build time, not in Dart unit tests.
 
-### Private Parsing Functions in `init.dart`
-These functions are private and would need to be extracted:
+## Adding New Tests
 
-- `_extractApplicationId()` - Gradle bundle ID parsing
-- `_extractProductFlavors()` - Gradle flavor parsing (KTS & Groovy)
-- `_extractAppNameFromGradle()` - App name extraction
-- `_generateYamlContent()` - YAML generation
-- `_inferFlavorsFromBuildConfigs()` - iOS build config parsing
-
-**Recommendation**: Extract to `bin/src/utils/gradle_parser.dart` and `bin/src/utils/yaml_generator.dart`
-
-### Private Functions in `ios_run_script.dart`
-- `_configBaseRelativeToProjectDir()` - Path normalization
-- `_rubyScriptContents()` - Ruby script generation
-
-**Recommendation**: Make these `internal` or extract to a testable utility.
-
-## Suggested Refactoring for Better Testability
-
-1. **Extract Gradle Parsing**:
-   ```dart
-   // bin/src/utils/gradle_parser.dart
-   class GradleParser {
-     static String? extractApplicationId(String content);
-     static Map<String, String> extractProductFlavors(String content, bool isKts);
-     static String? extractAppName(String content);
-   }
-   ```
-
-2. **Extract YAML Generation**:
-   ```dart
-   // bin/src/utils/yaml_generator.dart
-   class YamlGenerator {
-     static String generateContent({...});
-   }
-   ```
-
-3. **Extract iOS Utilities**:
-   ```dart
-   // bin/src/utils/ios_utils.dart
-   class IosUtils {
-     static String configBaseRelativeToProjectDir(String configBase);
-     static String rubyScriptContents();
-   }
-   ```
-
-4. **Make Commands Testable**:
-   - Use dependency injection for file system operations
-   - Use process mocking for external commands
-   - Extract business logic from command handlers
-
-## Integration Testing
-
-For full command testing, consider integration tests that:
-- Use temporary directories
-- Mock external processes
-- Verify file outputs
-- Test end-to-end workflows
-
+- Pure functions: drop them in `test/<package>/<file>_test.dart` next to
+  the existing tests.
+- Anything that touches the file system or external processes: use the
+  abstractions in `bin/src/utils/file_system.dart` and
+  `bin/src/utils/process_runner.dart` and the mocks in
+  `test/utils/mocks.dart`. Do not call real `dart:io` from tests.
+- For pbxproj/Info.plist parsing edge cases, prefer adding to
+  `test/fixtures/` over hand-writing minimal pbxproj strings — the
+  format is unforgiving.
