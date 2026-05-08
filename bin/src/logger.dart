@@ -48,5 +48,5 @@ void logDebug(String message) {
 
 /// Log a success message.
 void logSuccess(String message) {
-  _logger?.i('✅ $message');
+  _logger?.i(message);
 }
