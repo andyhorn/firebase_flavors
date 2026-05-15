@@ -5,6 +5,7 @@ import '../logger.dart';
 import '../models/flavor_config.dart';
 import '../models/global_config.dart';
 import '../utils/process_runner.dart';
+import '../utils/host_platform.dart';
 
 /// Service for interacting with the Firebase CLI (flutterfire).
 class FirebaseService {
@@ -65,7 +66,7 @@ class FirebaseService {
     Process process;
     try {
       process = await _processRunner.start(
-        'flutterfire',
+        HostPlatformConfig.flutterfireCli,
         args,
         mode: ProcessStartMode.inheritStdio,
       );
@@ -76,7 +77,7 @@ class FirebaseService {
       );
       logInfo('Install it with: dart pub global activate flutterfire_cli');
       logInfo(
-        'Then ensure your PATH includes: ${Platform.environment['HOME'] ?? Platform.environment['USERPROFILE']}/.pub-cache/bin',
+        'Then ensure your PATH includes: ${HostPlatformConfig.pubCacheLocation}',
       );
       throw FirebaseFlavorsException('Failed to start flutterfire command.');
     }
