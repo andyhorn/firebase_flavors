@@ -1,3 +1,14 @@
+## 3.1.0
+
+### Fixed
+
+- Fix script execution on Windows.
+- Fix error message on Windows suggestion wrong pub cache path.
+
+### Changed
+
+- (Internal) `HostPlatformConfiguration` added to configure certain runtime variables such as the pub cache location and flutterfire command to ensure correct cross-platform execution.
+
 ## 3.0.0
 
 ### Breaking Changes
