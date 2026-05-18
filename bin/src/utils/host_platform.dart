@@ -28,7 +28,7 @@ abstract class HostPlatformConfig {
         return '${_platform.environment['USERPROFILE']}'
             '\\AppData\\Local\\Pub\\Cache\\bin';
       case _:
-        throw UnknownPlatformException();
+        throw UnknownPlatformException(_platform);
     }
   }
 
@@ -45,7 +45,7 @@ abstract class HostPlatformConfig {
       case 'windows':
         return 'flutterfire.bat';
       case _:
-        throw UnknownPlatformException();
+        throw UnknownPlatformException(_platform);
     }
   }
 }

@@ -1,6 +1,7 @@
 import 'package:platform/platform.dart';
 import 'package:test/test.dart';
 
+import '../../bin/src/utils/exceptions.dart';
 import '../../bin/src/utils/host_platform.dart';
 
 void main() {
@@ -30,5 +31,26 @@ void main() {
       HostPlatformConfig.pubCacheLocation,
       endsWith('\\AppData\\Local\\Pub\\Cache\\bin'),
     );
+  });
+
+  test('unsupported platform throws an unknown platform exception', () {
+    HostPlatformConfig.overridePlatform(
+      FakePlatform(operatingSystem: 'android'),
+    );
+
+    expect(
+      () => HostPlatformConfig.flutterfireCli,
+      throwsA(isA<UnknownPlatformException>()),
+    );
+  });
+
+  test('supported platform do not throw', () {
+    for (var platform in ['linux', 'windows', 'macos']) {
+      HostPlatformConfig.overridePlatform(
+        FakePlatform(operatingSystem: platform),
+      );
+
+      expect(() => HostPlatformConfig.flutterfireCli, returnsNormally);
+    }
   });
 }
